@@ -15,7 +15,12 @@ ARG NODE_VERSION=22-bookworm-slim
 
 FROM node:${NODE_VERSION} AS dependencies
 WORKDIR /app
+# postinstall runs `prisma generate` — needs schema + OpenSSL before npm ci
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json .npmrc* ./
+COPY prisma ./prisma
 RUN npm ci --no-audit --no-fund
 
 FROM node:${NODE_VERSION} AS builder
