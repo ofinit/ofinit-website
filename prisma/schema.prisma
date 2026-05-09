@@ -1,7 +1,8 @@
 generator client {
   provider      = "prisma-client-js"
-  // Docker / Coolify (ARM + amd64): Next build sometimes detects openssl-1.1 vs 3.x — ship both engines.
-  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "linux-amd64-openssl-3.0.x", "linux-amd64-openssl-1.1.x"]
+  // Valid Prisma 6 targets only (no linux-amd64-openssl-*). Debian slim + ARM64 Coolify:
+  // debian-openssl-* covers amd64/arm64 node:bookworm-slim; linux-arm64-* for explicit ARM glibc.
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "linux-arm64-openssl-3.0.x", "linux-arm64-openssl-1.1.x"]
 }
 
 // Local: DATABASE_URL="file:./dev.db" → SQLite at prisma/dev.db (no server).
