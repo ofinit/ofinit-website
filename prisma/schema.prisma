@@ -120,3 +120,29 @@ model NewsletterSubscription {
 
   @@map("newsletter_subscriptions")
 }
+
+/// Public markdown pages (privacy policy, terms, cookie policy, careers, etc.)
+model PublicPage {
+  slug      String   @id
+  title     String
+  bodyMd    String   @map("body_md")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("public_pages")
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  shortDescription String   @map("short_description")
+  bodyMd           String   @map("body_md")
+  logoUrl          String?  @map("logo_url")
+  published        Boolean  @default(true)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("services")
+}

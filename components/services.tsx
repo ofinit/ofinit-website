@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 import { getServiceIcon } from "@/lib/site-content/icons"
 import type { ServicesSectionContent } from "@/lib/site-content/types"
+import { serviceSlugFromName } from "@/lib/services/slug"
 
 export function Services({ content }: { content: ServicesSectionContent }) {
   return (
@@ -14,8 +16,10 @@ export function Services({ content }: { content: ServicesSectionContent }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {content.items.map((service, index) => {
             const Icon = getServiceIcon(service.icon)
+            const slug = serviceSlugFromName(service.title)
             return (
-              <Card key={`${service.title}-${index}`} className="bg-card border-border hover:border-primary/50 transition-colors group">
+              <Link key={`${service.title}-${index}`} href={`/services/${slug}`} className="block">
+                <Card className="bg-card border-border hover:border-primary/50 transition-colors group h-full">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <Icon className="h-6 w-6 text-primary" />
@@ -26,6 +30,7 @@ export function Services({ content }: { content: ServicesSectionContent }) {
                   <CardDescription className="text-muted-foreground leading-relaxed">{service.description}</CardDescription>
                 </CardContent>
               </Card>
+              </Link>
             )
           })}
         </div>

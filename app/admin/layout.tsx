@@ -2,7 +2,7 @@ import type React from "react"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
-import { LayoutDashboard, FileText, Settings, Briefcase, FolderTree, Receipt, LogOut, LayoutTemplate, Inbox } from "lucide-react"
+import { LayoutDashboard, FileText, Settings, Briefcase, FolderTree, Receipt, LogOut, LayoutTemplate, Inbox, FileSignature, Wrench } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -38,6 +38,22 @@ export default function AdminLayout({
             >
               <LayoutTemplate className="w-5 h-5" />
               <span>Website</span>
+            </Link>
+
+            <Link
+              href="/admin/pages"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <FileSignature className="w-5 h-5" />
+              <span>Pages</span>
+            </Link>
+
+            <Link
+              href="/admin/services"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Wrench className="w-5 h-5" />
+              <span>Services</span>
             </Link>
 
             <Link

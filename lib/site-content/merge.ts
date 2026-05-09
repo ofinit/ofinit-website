@@ -5,6 +5,39 @@ function isNavLinks(x: unknown): x is PublicSiteContent["header"]["navLinks"] {
   return Array.isArray(x) && x.every((i) => i && typeof i === "object" && "label" in i && "href" in i)
 }
 
+function mapPlaceholderFooterLinks(links: PublicSiteContent["footer"]["policiesLinks"]): PublicSiteContent["footer"]["policiesLinks"] {
+  const labelToHref: Record<string, string> = {
+    "Privacy Policy": "/privacy-policy",
+    "Terms of Service": "/terms-of-service",
+    "Cookie Policy": "/cookie-policy",
+    Careers: "/careers",
+    "UI/UX Design": "/services/ui-ux-design",
+    "Web Development": "/services/web-development",
+    "Software Development": "/services/software-development",
+    "Mobile App Development": "/services/mobile-app-development",
+    "AI Integration": "/services/ai-integration",
+    DevOps: "/services/devops-services",
+    "DevOps Services": "/services/devops-services",
+  }
+
+  return links.map((l) => {
+    const mapped = labelToHref[l.label]
+    if (!mapped) return l
+    if (!l.href || l.href === "#" || l.href.trim() === "") return { ...l, href: mapped }
+    return l
+  })
+}
+
+function mapHeaderLinks(links: PublicSiteContent["header"]["navLinks"]): PublicSiteContent["header"]["navLinks"] {
+  return links.map((l) => {
+    if (l.label !== "Services") return l
+    if (l.href === "/#services" || l.href === "#" || l.href.trim() === "") {
+      return { ...l, href: "/services" }
+    }
+    return l
+  })
+}
+
 function isServiceItems(x: unknown): x is PublicSiteContent["services"]["items"] {
   return (
     Array.isArray(x) &&
@@ -43,14 +76,20 @@ export function mergePublicSiteContent(raw: unknown): PublicSiteContent {
     header: {
       ...d.header,
       ...p.header,
-      navLinks: isNavLinks(p.header?.navLinks) ? p.header!.navLinks : d.header.navLinks,
+      navLinks: isNavLinks(p.header?.navLinks) ? mapHeaderLinks(p.header!.navLinks) : d.header.navLinks,
     },
     footer: {
       ...d.footer,
       ...p.footer,
-      servicesLinks: isNavLinks(p.footer?.servicesLinks) ? p.footer!.servicesLinks : d.footer.servicesLinks,
-      companyLinks: isNavLinks(p.footer?.companyLinks) ? p.footer!.companyLinks : d.footer.companyLinks,
-      policiesLinks: isNavLinks(p.footer?.policiesLinks) ? p.footer!.policiesLinks : d.footer.policiesLinks,
+      servicesLinks: isNavLinks(p.footer?.servicesLinks)
+        ? mapPlaceholderFooterLinks(p.footer!.servicesLinks)
+        : d.footer.servicesLinks,
+      companyLinks: isNavLinks(p.footer?.companyLinks)
+        ? mapPlaceholderFooterLinks(p.footer!.companyLinks)
+        : d.footer.companyLinks,
+      policiesLinks: isNavLinks(p.footer?.policiesLinks)
+        ? mapPlaceholderFooterLinks(p.footer!.policiesLinks)
+        : d.footer.policiesLinks,
     },
     hero: { ...d.hero, ...p.hero },
     services: {

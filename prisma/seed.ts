@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs"
 import { blogPosts } from "../lib/blog-data"
 import { categories } from "../lib/categories-data"
 import { caseStudiesData } from "../lib/case-studies-data"
+import { getDefaultPublicPage } from "../lib/public-pages/defaults"
+import { PUBLIC_PAGE_SLUGS } from "../lib/public-pages/types"
+import { getDefaultServices } from "../lib/services/defaults"
 
 const prisma = new PrismaClient()
 
@@ -118,6 +121,44 @@ async function main() {
         projectUrl: study.projectUrl ?? null,
         published: study.published,
         updatedAt: new Date(),
+      },
+    })
+  }
+
+  for (const slug of PUBLIC_PAGE_SLUGS) {
+    const def = getDefaultPublicPage(slug)
+    await prisma.publicPage.upsert({
+      where: { slug },
+      create: {
+        slug,
+        title: def.title,
+        bodyMd: def.bodyMd,
+      },
+      update: {
+        title: def.title,
+        bodyMd: def.bodyMd,
+      },
+    })
+  }
+
+  for (const s of getDefaultServices()) {
+    await prisma.service.upsert({
+      where: { slug: s.slug },
+      create: {
+        slug: s.slug,
+        name: s.name,
+        shortDescription: s.shortDescription,
+        bodyMd: s.bodyMd,
+        logoUrl: null,
+        published: s.published,
+        sortOrder: s.sortOrder,
+      },
+      update: {
+        name: s.name,
+        shortDescription: s.shortDescription,
+        bodyMd: s.bodyMd,
+        published: s.published,
+        sortOrder: s.sortOrder,
       },
     })
   }

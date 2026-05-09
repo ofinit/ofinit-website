@@ -25,5 +25,9 @@ export async function saveSiteContent(content: PublicSiteContent) {
   revalidatePath("/blog", "layout")
   revalidatePath("/case-studies", "layout")
   revalidatePath("/cancel-refund-policy", "layout")
+  revalidatePath("/privacy-policy", "layout")
+  revalidatePath("/terms-of-service", "layout")
+  revalidatePath("/cookie-policy", "layout")
+  revalidatePath("/careers", "layout")
   return { success: true as const }
 }
