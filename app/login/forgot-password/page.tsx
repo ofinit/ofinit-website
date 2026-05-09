@@ -9,12 +9,10 @@ const card = {
   boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 } as const
 
-type SearchParams = Promise<{ error?: string; reset?: string }>
+type SearchParams = Promise<{ sent?: string; error?: string }>
 
-export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function ForgotPasswordPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
-  const showInvalid = params.error === "invalid"
-  const showResetOk = params.reset === "success"
 
   return (
     <div
@@ -42,24 +40,32 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
             <span style={{ color: "#2563eb" }}>{"<"}</span>
             <span>OfinIT</span>
             <span style={{ color: "#2563eb" }}>{"/>"}</span>
-            <span style={{ marginLeft: "8px" }}>Admin</span>
+            <span style={{ marginLeft: "8px" }}>Forgot password</span>
           </h1>
-          <p style={{ color: "#6b7280" }}>Sign in to access the admin panel</p>
+          <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+            Enter your admin email. If an account exists, we will send a reset link when email is configured.
+          </p>
         </div>
 
-        {showResetOk ? (
+        {params.sent === "1" ? (
           <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "#ecfdf5", borderRadius: "6px", fontSize: "0.875rem", color: "#065f46" }}>
-            Your password was updated. Sign in with your new password.
+            If that email matches an admin account, check your inbox for a reset link. The link expires in one hour.
           </div>
         ) : null}
 
-        {showInvalid ? (
+        {params.error === "missing" ? (
           <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "#fef2f2", borderRadius: "6px", fontSize: "0.875rem", color: "#991b1b" }}>
-            Invalid email or password. Please try again.
+            Please enter your email address.
           </div>
         ) : null}
 
-        <form action="/api/auth/login" method="POST">
+        {params.error === "server" ? (
+          <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "#fef2f2", borderRadius: "6px", fontSize: "0.875rem", color: "#991b1b" }}>
+            Something went wrong. Try again later.
+          </div>
+        ) : null}
+
+        <form action="/api/auth/forgot-password" method="POST">
           <div style={{ marginBottom: "1rem" }}>
             <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.5rem" }}>
               Email address
@@ -69,7 +75,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               name="email"
               required
               autoComplete="email"
-              placeholder="name@example.com"
+              placeholder="you@example.com"
               style={{
                 width: "100%",
                 padding: "0.5rem",
@@ -78,32 +84,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
                 fontSize: "0.875rem",
               }}
             />
-          </div>
-
-          <div style={{ marginBottom: "0.5rem" }}>
-            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.5rem" }}>
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              required
-              autoComplete="current-password"
-              placeholder="Your password"
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "0.875rem",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "1.25rem", textAlign: "right" }}>
-            <Link href="/login/forgot-password" style={{ color: "#2563eb", fontSize: "0.8125rem", textDecoration: "none" }}>
-              Forgot password?
-            </Link>
           </div>
 
           <button
@@ -120,15 +100,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               cursor: "pointer",
             }}
           >
-            Sign In
+            Send reset link
           </button>
-
-          <div style={{ marginTop: "1rem", textAlign: "center" }}>
-            <a href="/" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-              ← Back to Website
-            </a>
-          </div>
         </form>
+
+        <div style={{ marginTop: "1rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <Link href="/login" style={{ color: "#2563eb", fontSize: "0.875rem", textDecoration: "none" }}>
+            ← Back to sign in
+          </Link>
+          <Link href="/" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
+            ← Back to Website
+          </Link>
+        </div>
       </div>
     </div>
   )
