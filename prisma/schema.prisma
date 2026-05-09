@@ -93,3 +93,18 @@ model SiteSetting {
 
   @@map("site_settings")
 }
+
+model LeadSubmission {
+  id        String   @id @default(cuid())
+  source    String
+  name      String?
+  email     String
+  company   String?
+  phone     String?
+  message   String?
+  consent   Boolean  @default(false)
+  pageUrl   String?  @map("page_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("lead_submissions")
+}

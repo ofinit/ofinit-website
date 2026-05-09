@@ -4,6 +4,7 @@ import { About } from "@/components/about"
 import { Services } from "@/components/services"
 import { Features } from "@/components/features"
 import { CTA } from "@/components/cta"
+import { ContactLeadSection } from "@/components/contact-lead-section"
 import { Footer } from "@/components/footer"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
 
@@ -18,6 +19,7 @@ export default async function Home() {
       <Features content={site.features} />
       <About content={site.about} />
       <CTA content={site.cta} />
+      <ContactLeadSection />
       <Footer content={site.footer} />
     </main>
   )

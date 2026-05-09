@@ -20,7 +20,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
 
 export function Footer({ content }: { content: SiteFooterContent }) {
   return (
-    <footer id="contact" className="border-t border-border bg-white">
+    <footer className="border-t border-border bg-white">
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           <div className="sm:col-span-2 lg:col-span-2">

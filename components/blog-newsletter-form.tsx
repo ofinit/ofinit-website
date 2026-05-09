@@ -1,0 +1,70 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
+
+export function BlogNewsletterForm() {
+  const [pending, setPending] = useState(false)
+  const [consent, setConsent] = useState(false)
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    const payload = {
+      email: String(fd.get("email") ?? ""),
+      consent,
+      _gotcha: String(fd.get("_gotcha") ?? ""),
+    }
+
+    setPending(true)
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const data = (await res.json()) as { ok?: boolean; error?: string; fieldErrors?: { email?: string[]; consent?: string[] } }
+
+      if (!res.ok) {
+        const emailErr = data.fieldErrors?.email?.[0]
+        const consentErr = data.fieldErrors?.consent?.[0]
+        toast.error(emailErr || consentErr || data.error || "Could not subscribe.")
+        return
+      }
+
+      toast.success("You're subscribed. Watch your inbox for new posts.")
+      form.reset()
+      setConsent(false)
+    } catch {
+      toast.error("Network error. Please try again.")
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4 max-w-md mx-auto text-left">
+      <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" className="absolute opacity-0 pointer-events-none h-0 w-0" aria-hidden />
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input name="email" type="email" required placeholder="you@company.com" autoComplete="email" disabled={pending} className="flex-1" />
+        <Button type="submit" disabled={pending}>
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe"}
+        </Button>
+      </div>
+
+      <div className="flex items-start gap-3">
+        <Checkbox id="newsletter-consent" checked={consent} onCheckedChange={(v) => setConsent(v === true)} disabled={pending} />
+        <Label htmlFor="newsletter-consent" className="text-sm font-normal leading-snug cursor-pointer text-muted-foreground">
+          I agree to receive occasional emails with articles and updates. Unsubscribe anytime. *
+        </Label>
+      </div>
+    </form>
+  )
+}

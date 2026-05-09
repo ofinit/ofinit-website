@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BlogNewsletterForm } from "@/components/blog-newsletter-form"
 import Link from "next/link"
 import { getPublishedBlogPostsForPublic } from "@/lib/blog/queries"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
@@ -85,14 +86,7 @@ export default async function BlogPage() {
               <p className="text-muted-foreground mb-8">
                 Get the latest articles and insights delivered directly to your inbox.
               </p>
-              <div className="flex gap-2 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-2 rounded-md border border-input bg-background"
-                />
-                <Button>Subscribe</Button>
-              </div>
+              <BlogNewsletterForm />
             </div>
           </div>
         </section>
