@@ -25,8 +25,13 @@ RUN npm ci --no-audit --no-fund
 
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
+# Regenerate client after schema (binaryTargets) is fully copied — deps stage used an older layer cache.
+RUN npx prisma generate
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -59,11 +64,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Schema + CLI: run `npx prisma db push` once from a shell (or Coolify one-off) after first deploy.
+# Schema + global Prisma CLI (`npx prisma db push`). Local npm install hits peer-deps on standalone package.json — use -g.
 COPY --from=builder /app/prisma ./prisma
 USER root
-RUN cd /app && npm install prisma@6.19.0 --omit=dev --no-save \
-  && chown -R nextjs:nodejs /app/prisma /app/node_modules/prisma \
+RUN npm install -g prisma@6.19.3 \
   && npm cache clean --force
 
 COPY --chmod=755 scripts/docker-entrypoint.sh /docker-entrypoint.sh

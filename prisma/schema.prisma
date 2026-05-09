@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Docker / Coolify (ARM + amd64): Next build sometimes detects openssl-1.1 vs 3.x — ship both engines.
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "linux-amd64-openssl-3.0.x", "linux-amd64-openssl-1.1.x"]
 }
 
 // Local: DATABASE_URL="file:./dev.db" → SQLite at prisma/dev.db (no server).
