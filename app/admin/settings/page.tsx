@@ -1,16 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Save } from "lucide-react"
+import { Save, Upload } from "lucide-react"
+import { SearchableSelect } from "@/components/ui/searchable-select"
+
+import type { GstParty } from "@/lib/gst/invoice"
+import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
+import { loadSupplierProfileFromDb, saveSupplierProfileToDb } from "@/app/actions/gst-actions"
 
 export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
+  const logoFileRef = useRef<HTMLInputElement>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   const [generalSettings, setGeneralSettings] = useState({
     siteName: "OfinIT Solutions Pvt. Ltd.",
@@ -53,6 +60,63 @@ export default function SettingsPage() {
     smtpFromName: "OfinIT Solutions",
     smtpEncryption: "tls",
   })
+
+  const [supplierProfile, setSupplierProfile] = useState<GstParty>({
+    legalName: "OfinIT Solutions Pvt. Ltd.",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    pinCode: "",
+    country: "India",
+    state: "",
+    stateCode: "27",
+    gstin: "",
+  })
+
+  useEffect(() => {
+    loadSupplierProfileFromDb()
+      .then((existing) => {
+        if (existing) setSupplierProfile(existing)
+      })
+      .catch(() => {})
+  }, [])
+
+  const supplierStateLabel = useMemo(() => {
+    const code = supplierProfile.stateCode
+    const name = getIndiaStateNameByCode(code) || supplierProfile.state
+    return `${code}${name ? ` - ${name}` : ""}`
+  }, [supplierProfile.stateCode, supplierProfile.state])
+
+  const handleSaveSupplier = async () => {
+    setSaving(true)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await saveSupplierProfileToDb({
+      ...supplierProfile,
+      country: "India",
+      state: getIndiaStateNameByCode(supplierProfile.stateCode) || supplierProfile.state,
+    })
+    setSaving(false)
+    alert("Supplier profile saved successfully!")
+  }
+
+  async function onLogoFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok) throw new Error(data.error || "Upload failed")
+      if (data.url) setSupplierProfile((p) => ({ ...p, logoUrl: data.url }))
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed")
+    } finally {
+      setLogoUploading(false)
+    }
+  }
 
   const handleSaveGeneral = async () => {
     setSaving(true)
@@ -110,6 +174,7 @@ export default function SettingsPage() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="social">Social Media</TabsTrigger>
+          <TabsTrigger value="supplier">Supplier</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
         </TabsList>
@@ -322,6 +387,141 @@ export default function SettingsPage() {
                 <Button onClick={handleSaveSocial} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="supplier">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-2">Supplier Profile</h2>
+            <p className="text-gray-600 mb-6">Used for all invoices (GST Invoices → Place of supply is derived from supplier state).</p>
+
+            <div className="space-y-6">
+              <div>
+                <Label>Legal name *</Label>
+                <Input
+                  value={supplierProfile.legalName}
+                  onChange={(e) => setSupplierProfile({ ...supplierProfile, legalName: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label>Company logo</Label>
+                <p className="text-sm text-gray-500 mt-1 mb-2">
+                  Shown on the invoice header. Enter an image URL or upload a file (stored under{" "}
+                  <span className="font-mono text-xs">/uploads</span>).
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    value={supplierProfile.logoUrl || ""}
+                    onChange={(e) => setSupplierProfile({ ...supplierProfile, logoUrl: e.target.value || undefined })}
+                    placeholder="https://… or /uploads/…"
+                    className="max-w-xl"
+                  />
+                  <input
+                    ref={logoFileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={onLogoFileSelected}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={logoUploading}
+                    onClick={() => logoFileRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {logoUploading ? "Uploading…" : "Upload"}
+                  </Button>
+                </div>
+                {supplierProfile.logoUrl ? (
+                  <div className="mt-3 flex items-center gap-4">
+                    <img
+                      src={supplierProfile.logoUrl}
+                      alt="Logo preview"
+                      className="h-12 w-auto max-w-[200px] object-contain border rounded p-1 bg-white"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSupplierProfile({ ...supplierProfile, logoUrl: undefined })}
+                    >
+                      Remove logo
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div>
+                <Label>GSTIN</Label>
+                <Input
+                  value={supplierProfile.gstin || ""}
+                  onChange={(e) => setSupplierProfile({ ...supplierProfile, gstin: e.target.value.toUpperCase() })}
+                  placeholder="27AAAAA0000A1Z5"
+                />
+              </div>
+
+              <div>
+                <Label>Address line 1</Label>
+                <Input
+                  value={supplierProfile.addressLine1}
+                  onChange={(e) => setSupplierProfile({ ...supplierProfile, addressLine1: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label>Address line 2</Label>
+                <Input
+                  value={supplierProfile.addressLine2 || ""}
+                  onChange={(e) => setSupplierProfile({ ...supplierProfile, addressLine2: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label>City</Label>
+                  <Input value={supplierProfile.city} onChange={(e) => setSupplierProfile({ ...supplierProfile, city: e.target.value })} />
+                </div>
+                <div>
+                  <Label>PIN</Label>
+                  <Input
+                    value={supplierProfile.pinCode}
+                    onChange={(e) => setSupplierProfile({ ...supplierProfile, pinCode: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label>State</Label>
+                  <SearchableSelect
+                    value={supplierProfile.stateCode}
+                    placeholder="Select state"
+                    searchPlaceholder="Search state..."
+                    options={INDIA_GST_STATES.map((s) => ({ value: s.code, label: s.name, keywords: s.code }))}
+                    onChange={(v) =>
+                      setSupplierProfile({
+                        ...supplierProfile,
+                        stateCode: v,
+                        state: getIndiaStateNameByCode(v),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>State code</Label>
+                  <Input value={supplierStateLabel} readOnly />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSaveSupplier} disabled={saving}>
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? "Saving..." : "Save Supplier"}
                 </Button>
               </div>
             </div>

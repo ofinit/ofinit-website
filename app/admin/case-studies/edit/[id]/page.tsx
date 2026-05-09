@@ -2,8 +2,9 @@ import { CaseStudyForm } from "@/components/admin/case-study-form"
 import { getCaseStudyById } from "@/app/actions/case-study-actions"
 import { notFound } from "next/navigation"
 
-export default async function EditCaseStudyPage({ params }: { params: { id: string } }) {
-  const caseStudy = await getCaseStudyById(params.id)
+export default async function EditCaseStudyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const caseStudy = await getCaseStudyById(id)
 
   if (!caseStudy) {
     notFound()

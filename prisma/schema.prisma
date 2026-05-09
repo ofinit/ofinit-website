@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Local: DATABASE_URL="file:./dev.db" → SQLite at prisma/dev.db (no server).
+// Production MySQL: provider = "mysql", add @db.* types, set DATABASE_URL.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
+
+model BlogPost {
+  id                 String   @id
+  title              String
+  slug               String   @unique
+  excerpt            String
+  content            String
+  category           String
+  author             Json
+  publishedAt        String   @map("published_at")
+  readTime           String   @map("read_time")
+  image              String
+  imageAlt           String   @map("image_alt")
+  metaTitle          String   @map("meta_title")
+  metaDescription    String   @map("meta_description")
+  metaKeywords       Json     @map("meta_keywords")
+  ogTitle            String?  @map("og_title")
+  ogDescription      String?  @map("og_description")
+  ogImage            String?  @map("og_image")
+  twitterTitle       String?  @map("twitter_title")
+  twitterDescription String?  @map("twitter_description")
+  twitterImage       String?  @map("twitter_image")
+  canonicalUrl       String?  @map("canonical_url")
+  featured           Boolean  @default(false)
+  status             String
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+
+model Category {
+  id          String   @id
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+model CaseStudy {
+  id          String   @id
+  title       String
+  client      String
+  category    String
+  description String
+  tags        Json
+  image       String
+  imageAlt    String   @map("image_alt")
+  projectUrl  String?  @map("project_url")
+  published   Boolean  @default(false)
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("case_studies")
+}
+
+model GstInvoiceRecord {
+  id        String   @id
+  payload   Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("gst_invoice_records")
+}
+
+model SiteSetting {
+  key   String @id
+  value Json
+
+  @@map("site_settings")
+}

@@ -1,10 +1,13 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Plus, Edit, Trash2 } from "lucide-react"
-import { blogPosts } from "@/lib/blog-data"
+import { Plus, Edit } from "lucide-react"
+import { listBlogPostsForAdmin } from "@/app/actions/blog-actions"
+import { BlogDeleteButton } from "@/components/admin/blog-delete-button"
 
-export default function BlogsListPage() {
+export default async function BlogsListPage() {
+  const blogPosts = await listBlogPostsForAdmin()
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -44,6 +47,13 @@ export default function BlogsListPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
+              {blogPosts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    No posts yet. Create one to get started.
+                  </td>
+                </tr>
+              ) : null}
               {blogPosts.map((post) => (
                 <tr key={post.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
@@ -53,29 +63,23 @@ export default function BlogsListPage() {
                   <td className="px-6 py-4 text-sm text-gray-900">{post.category}</td>
                   <td className="px-6 py-4">
                     <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        post.status === "published" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        post.status === "published" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {post.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{post.publishedAt}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <Link href={`/admin/blogs/edit/${post.id}`}>
-                      <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 text-red-600 hover:text-red-700 bg-transparent"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
+                  <td className="px-6 py-4 text-sm text-gray-500">{post.publishedAt}</td>
+                  <td className="px-6 py-4 text-right text-sm font-medium">
+                    <div className="flex justify-end gap-2">
+                      <Link href={`/admin/blogs/edit/${post.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                      <BlogDeleteButton postId={post.id} />
+                    </div>
                   </td>
                 </tr>
               ))}

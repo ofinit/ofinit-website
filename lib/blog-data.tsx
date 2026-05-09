@@ -27,6 +27,8 @@ export interface BlogPost {
   canonicalUrl?: string
   featured: boolean
   status: "draft" | "published"
+  /** ISO timestamp when loaded from DB (metadata, structured data) */
+  createdAt?: string
 }
 
 export const blogPosts: BlogPost[] = [

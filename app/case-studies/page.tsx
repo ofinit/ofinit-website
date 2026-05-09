@@ -6,13 +6,16 @@ import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getCaseStudies } from "@/app/actions/case-study-actions"
+import { loadPublicSiteContent } from "@/lib/site-content/load"
+
+export const dynamic = "force-dynamic"
 
 export default async function CaseStudiesPage() {
-  const caseStudies = await getCaseStudies()
+  const [caseStudies, site] = await Promise.all([getCaseStudies(), loadPublicSiteContent()])
 
   return (
     <>
-      <Header />
+      <Header content={site.header} />
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-muted/50 to-background">
@@ -100,7 +103,7 @@ export default async function CaseStudiesPage() {
           </div>
         </section>
       </div>
-      <Footer />
+      <Footer content={site.footer} />
     </>
   )
 }

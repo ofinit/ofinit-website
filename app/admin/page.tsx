@@ -2,10 +2,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FileText, Eye, Edit, Plus, Briefcase } from "lucide-react"
-import { blogPosts } from "@/lib/blog-data"
 import { getAllCaseStudies } from "@/app/actions/case-study-actions"
+import { listBlogPostsForAdmin } from "@/app/actions/blog-actions"
 
 export default async function AdminDashboard() {
+  const blogPosts = await listBlogPostsForAdmin()
   const publishedPosts = blogPosts.filter((post) => post.status === "published")
   const draftPosts = blogPosts.filter((post) => post.status === "draft")
 

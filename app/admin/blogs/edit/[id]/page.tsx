@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation"
 import { BlogForm } from "@/components/admin/blog-form"
-import { blogPosts } from "@/lib/blog-data"
+import { getBlogPostByIdForAdmin } from "@/app/actions/blog-actions"
 
-export default function EditBlogPage({ params }: { params: { id: string } }) {
-  const post = blogPosts.find((p) => p.id === params.id)
+export default async function EditBlogPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const post = await getBlogPostByIdForAdmin(id)
 
   if (!post) {
     notFound()

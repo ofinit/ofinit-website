@@ -1,6 +1,8 @@
 import type React from "react"
 import Link from "next/link"
-import { LayoutDashboard, FileText, Settings, Briefcase, FolderTree, LogOut } from "lucide-react"
+
+export const dynamic = "force-dynamic"
+import { LayoutDashboard, FileText, Settings, Briefcase, FolderTree, Receipt, LogOut, LayoutTemplate } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -31,6 +33,14 @@ export default function AdminLayout({
             </Link>
 
             <Link
+              href="/admin/site"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <LayoutTemplate className="w-5 h-5" />
+              <span>Website</span>
+            </Link>
+
+            <Link
               href="/admin/blogs"
               className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
             >
@@ -52,6 +62,14 @@ export default function AdminLayout({
             >
               <Briefcase className="w-5 h-5" />
               <span>Case Studies</span>
+            </Link>
+
+            <Link
+              href="/admin/invoices"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Receipt className="w-5 h-5" />
+              <span>GST Invoices</span>
             </Link>
 
             <Link
