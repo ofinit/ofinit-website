@@ -8,6 +8,8 @@ import { BlogNewsletterForm } from "@/components/blog-newsletter-form"
 import Link from "next/link"
 import { getPublishedBlogPostsForPublic } from "@/lib/blog/queries"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
+import { Suspense } from "react"
+import { BlogNewsletterToast } from "@/components/blog-newsletter-toast"
 
 export const dynamic = "force-dynamic"
 
@@ -17,6 +19,9 @@ export default async function BlogPage() {
   return (
     <>
       <Header content={site.header} />
+      <Suspense fallback={null}>
+        <BlogNewsletterToast />
+      </Suspense>
       <main className="min-h-screen pt-16">
         <section className="py-20 bg-gradient-to-b from-background to-muted/20">
           <div className="container mx-auto px-8 sm:px-16 lg:px-24 xl:px-32">

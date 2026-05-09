@@ -3,6 +3,8 @@
 #
 # Required env (set in Coolify):
 #   DATABASE_URL — e.g. file:/app/data/app.db  (mount a persistent volume on /app/data)
+#   NEXT_PUBLIC_SITE_URL — public site origin for newsletter confirm links (https://your-domain.com)
+#   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM — required in production for double opt-in emails
 #   Optional: NODE_ENV=production (set by image)
 #
 # After first deploy, apply the schema (run once or from Coolify “Execute Command”):

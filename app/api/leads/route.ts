@@ -4,12 +4,17 @@ import { contactLeadSchema } from "@/lib/validations/leads"
 import { getClientIp } from "@/lib/request-ip"
 import { LEADS_RATE, rateLimitAllow } from "@/lib/rate-limit"
 import { verifyTurnstileToken } from "@/lib/turnstile"
+import { verifyPublicCsrf } from "@/lib/csrf-public"
 
 export async function POST(request: Request) {
   try {
     const json = (await request.json()) as Record<string, unknown>
     if (typeof json._gotcha === "string" && json._gotcha.trim() !== "") {
       return NextResponse.json({ ok: true })
+    }
+
+    if (!verifyPublicCsrf(request)) {
+      return NextResponse.json({ error: "Invalid security token. Please refresh the page." }, { status: 403 })
     }
 
     const ip = getClientIp(request)
@@ -30,12 +35,13 @@ export async function POST(request: Request) {
     }
 
     const { name, email, company, phone, message } = parsed.data
+    const emailNorm = email.trim().toLowerCase()
 
     await prisma.leadSubmission.create({
       data: {
         source: "contact",
         name,
-        email,
+        email: emailNorm,
         company: company?.trim() || null,
         phone: phone?.trim() || null,
         message,

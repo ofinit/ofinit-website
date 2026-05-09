@@ -9,10 +9,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { isTurnstileConfigured, SpamChallenge } from "@/components/spam-challenge"
+import { usePublicCsrf } from "@/hooks/use-public-csrf"
 
 type FieldErrors = Partial<Record<"name" | "email" | "company" | "phone" | "message" | "consent", string[]>>
 
 export function ContactLeadForm() {
+  const { token: csrfToken, ready: csrfReady, getFetchInit } = usePublicCsrf()
   const [pending, setPending] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [consent, setConsent] = useState(false)
@@ -21,9 +23,14 @@ export function ContactLeadForm() {
 
   const needChallenge = isTurnstileConfigured()
   const challengeReady = !needChallenge || Boolean(turnstileToken?.trim())
+  const csrfOk = Boolean(csrfToken?.trim())
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!csrfOk) {
+      toast.error("Loading security token… please wait a moment and try again.")
+      return
+    }
     setErrors({})
     const form = e.currentTarget
     const fd = new FormData(form)
@@ -40,11 +47,7 @@ export function ContactLeadForm() {
 
     setPending(true)
     try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
+      const res = await fetch("/api/leads", getFetchInit(payload))
       const data = (await res.json()) as { ok?: boolean; error?: string; fieldErrors?: FieldErrors }
 
       if (!res.ok) {
@@ -144,7 +147,12 @@ export function ContactLeadForm() {
         </p>
       ) : null}
 
-      <Button type="submit" size="lg" className="min-w-[160px]" disabled={pending || !challengeReady}>
+      <Button
+        type="submit"
+        size="lg"
+        className="min-w-[160px]"
+        disabled={pending || !challengeReady || !csrfReady || !csrfOk}
+      >
         {pending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

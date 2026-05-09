@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { isTurnstileConfigured, SpamChallenge } from "@/components/spam-challenge"
+import { usePublicCsrf } from "@/hooks/use-public-csrf"
 
 export function BlogNewsletterForm() {
+  const { token: csrfToken, ready: csrfReady, getFetchInit } = usePublicCsrf()
   const [pending, setPending] = useState(false)
   const [consent, setConsent] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
@@ -31,12 +33,14 @@ export function BlogNewsletterForm() {
 
     setPending(true)
     try {
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-      const data = (await res.json()) as { ok?: boolean; error?: string; fieldErrors?: { email?: string[]; consent?: string[] } }
+      const res = await fetch("/api/newsletter", getFetchInit(payload))
+      const data = (await res.json()) as {
+        ok?: boolean
+        error?: string
+        alreadySubscribed?: boolean
+        pendingConfirmation?: boolean
+        fieldErrors?: { email?: string[]; consent?: string[] }
+      }
 
       if (!res.ok) {
         const emailErr = data.fieldErrors?.email?.[0]
@@ -45,7 +49,11 @@ export function BlogNewsletterForm() {
         return
       }
 
-      toast.success("You're subscribed. Watch your inbox for new posts.")
+      if (data.alreadySubscribed) {
+        toast.success("You're already subscribed — thanks for reading.")
+      } else {
+        toast.success("Check your email and click the link to confirm your subscription.")
+      }
       form.reset()
       setConsent(false)
       setTurnstileToken(null)
@@ -67,7 +75,7 @@ export function BlogNewsletterForm() {
 
       <div className="flex flex-col sm:flex-row gap-2">
         <Input name="email" type="email" required placeholder="you@company.com" autoComplete="email" disabled={pending} className="flex-1" />
-        <Button type="submit" disabled={pending || !challengeReady}>
+        <Button type="submit" disabled={pending || !challengeReady || !csrfReady || !csrfOk}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe"}
         </Button>
       </div>
