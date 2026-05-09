@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { isTurnstileConfigured, SpamChallenge } from "@/components/spam-challenge"
 
 type FieldErrors = Partial<Record<"name" | "email" | "company" | "phone" | "message" | "consent", string[]>>
 
@@ -15,6 +16,11 @@ export function ContactLeadForm() {
   const [pending, setPending] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [consent, setConsent] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileKey, setTurnstileKey] = useState(0)
+
+  const needChallenge = isTurnstileConfigured()
+  const challengeReady = !needChallenge || Boolean(turnstileToken?.trim())
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -29,6 +35,7 @@ export function ContactLeadForm() {
       message: String(fd.get("message") ?? ""),
       consent,
       _gotcha: String(fd.get("_gotcha") ?? ""),
+      ...(turnstileToken ? { turnstileToken } : {}),
     }
 
     setPending(true)
@@ -53,6 +60,8 @@ export function ContactLeadForm() {
       toast.success("Thanks — we'll get back to you within one business day.")
       form.reset()
       setConsent(false)
+      setTurnstileToken(null)
+      setTurnstileKey((k) => k + 1)
     } catch {
       toast.error("Network error. Please try again.")
     } finally {
@@ -126,7 +135,16 @@ export function ContactLeadForm() {
       </div>
       {errors.consent?.[0] ? <p className="text-sm text-destructive -mt-2">{errors.consent[0]}</p> : null}
 
-      <Button type="submit" size="lg" className="min-w-[160px]" disabled={pending}>
+      <div key={turnstileKey}>
+        <SpamChallenge onToken={setTurnstileToken} />
+      </div>
+      {needChallenge ? (
+        <p className="text-xs text-muted-foreground">
+          Complete the verification above to enable submit (spam protection).
+        </p>
+      ) : null}
+
+      <Button type="submit" size="lg" className="min-w-[160px]" disabled={pending || !challengeReady}>
         {pending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
