@@ -1,9 +1,10 @@
 # Next.js 16 + Prisma — optimized for Coolify / Docker (standalone output).
 # Coolify: use Dockerfile build pack, expose port 3000 (or map Coolify PORT → 3000).
 #
-# Required env (set in Coolify):
+# Required env (set in Coolify — runtime):
 #   DATABASE_URL — e.g. file:/app/data/app.db  (mount a persistent volume on /app/data)
-#   NEXT_PUBLIC_SITE_URL — public site origin for newsletter confirm links (https://your-domain.com)
+#   SITE_URL — https://ofinit.com  (auth redirects; required at runtime, not only at build)
+#   NEXT_PUBLIC_SITE_URL — same URL (build-time + client; set as Coolify build arg too if possible)
 #   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM — required in production for double opt-in emails
 #   Optional: NODE_ENV=production (set by image)
 #
@@ -35,6 +36,10 @@ COPY . .
 # Regenerate client after schema (binaryTargets) is fully copied — deps stage used an older layer cache.
 RUN npx prisma generate
 
+ARG SITE_URL=
+ARG NEXT_PUBLIC_SITE_URL=
+ENV SITE_URL=$SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
@@ -51,6 +56,9 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs

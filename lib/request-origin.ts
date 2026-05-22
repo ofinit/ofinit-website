@@ -3,12 +3,16 @@
  * Avoids redirects to http://0.0.0.0:3000 when the app listens on 0.0.0.0 internally.
  */
 export function getRequestOrigin(request: Request): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL
+  // SITE_URL is read at runtime (Coolify env). NEXT_PUBLIC_* is often inlined at Docker build time.
+  const fromEnv = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL
   if (fromEnv?.trim()) {
     return fromEnv.replace(/\/$/, "")
   }
 
-  const forwardedHost = request.headers.get("x-forwarded-host")
+  const forwardedHost =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("x-real-host") ||
+    request.headers.get("x-original-host")
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https"
   if (forwardedHost) {
     const host = forwardedHost.split(",")[0]?.trim()
