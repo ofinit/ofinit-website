@@ -10,7 +10,8 @@ export function isValidSqliteFile(buffer: Buffer): boolean {
 }
 
 export async function checkpointSqliteWal(): Promise<void> {
-  await prisma.$executeRawUnsafe("PRAGMA wal_checkpoint(FULL)")
+  // PRAGMA returns rows — must use $queryRawUnsafe, not $executeRawUnsafe
+  await prisma.$queryRawUnsafe("PRAGMA wal_checkpoint(FULL)")
 }
 
 export async function readDatabaseBackup(): Promise<{ buffer: Buffer; filename: string }> {
