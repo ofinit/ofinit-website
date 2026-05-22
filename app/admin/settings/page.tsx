@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Save, Upload } from "lucide-react"
+import { DatabaseBackupPanel } from "@/components/admin/database-backup-panel"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 
 import type { GstParty } from "@/lib/gst/invoice"
@@ -177,6 +178,7 @@ export default function SettingsPage() {
           <TabsTrigger value="supplier">Supplier</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
+          <TabsTrigger value="database">Database</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -668,6 +670,10 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="database">
+          <DatabaseBackupPanel />
         </TabsContent>
       </Tabs>
     </div>

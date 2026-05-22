@@ -5,6 +5,11 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = request.cookies.get("admin_authenticated")?.value === "true"
   const isLoginPage = request.nextUrl.pathname === "/login"
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin")
+  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin")
+
+  if (isAdminApi && !isAuthenticated) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
   // Redirect to login if accessing admin without authentication
   if (isAdminRoute && !isAuthenticated) {
@@ -20,5 +25,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login"],
+  matcher: ["/admin/:path*", "/api/admin/:path*", "/login"],
 }
