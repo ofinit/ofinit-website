@@ -7,9 +7,9 @@
 #   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM — required in production for double opt-in emails
 #   Optional: NODE_ENV=production (set by image)
 #
-# After first deploy, apply the schema (run once or from Coolify “Execute Command”):
-#   npx prisma db push
-# Seeding (optional): npx prisma db seed
+# On container start, entrypoint runs `prisma db push` + admin seed (no manual tsx seed needed).
+# Optional: SEED_ADMIN_PASSWORD (default admin123). Set RUN_DB_SETUP=0 to skip auto migrate/seed.
+# Full sample data (blogs, etc.): run locally with `npx prisma db seed` — not in production image.
 #
 # Uploads: persist public/uploads by mounting the same volume path or bind-mount ./public/uploads.
 
@@ -65,9 +65,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Prisma Client + engines (not fully traced into standalone)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
 
 # Schema + global Prisma CLI (`npx prisma db push`). Local npm install hits peer-deps on standalone package.json — use -g.
 COPY --from=builder /app/prisma ./prisma
+COPY --chown=nextjs:nodejs scripts/docker-seed-admin.mjs ./scripts/docker-seed-admin.mjs
 USER root
 RUN npm install -g prisma@6.19.3 \
   && npm cache clean --force

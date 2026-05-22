@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db/prisma"
+import { redirectTo } from "@/lib/request-origin"
 
 export async function POST(request: Request) {
   const formData = await request.formData()
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const user = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } })
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return NextResponse.redirect(new URL("/login?error=invalid", request.url))
+      return redirectTo(request, "/login?error=invalid")
     }
 
     const cookieStore = await cookies()
@@ -22,9 +22,9 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
-    return NextResponse.redirect(new URL("/admin", request.url))
+    return redirectTo(request, "/admin")
   } catch (e) {
     console.error("Login error:", e)
-    return NextResponse.redirect(new URL("/login?error=invalid", request.url))
+    return redirectTo(request, "/login?error=invalid")
   }
 }

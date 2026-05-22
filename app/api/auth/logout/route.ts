@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { redirectTo } from "@/lib/request-origin"
 
 export async function GET(request: Request) {
   const cookieStore = await cookies()
   cookieStore.delete("admin_authenticated")
 
-  return NextResponse.redirect(new URL("/login", request.url))
+  return redirectTo(request, "/login")
 }
