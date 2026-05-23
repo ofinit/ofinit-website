@@ -33,7 +33,7 @@ export async function loadPublishedServices(): Promise<ServicePublic[]> {
     slug: s.slug,
     name: s.name,
     shortDescription: s.shortDescription,
-    bodyMd: s.bodyMd,
+    bodyMd: resolveServiceBodyMd(s.bodyMd, s.slug, s.shortDescription),
     logoUrl: null,
   }))
 }
@@ -60,7 +60,7 @@ export async function loadServiceBySlug(slug: string): Promise<ServicePublic | n
     slug: def.slug,
     name: def.name,
     shortDescription: def.shortDescription,
-    bodyMd: def.bodyMd,
+    bodyMd: resolveServiceBodyMd(def.bodyMd, def.slug, def.shortDescription),
     logoUrl: null,
   }
 }

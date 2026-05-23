@@ -1,3 +1,5 @@
+import { normalizeMarkdown } from "@/lib/markdown/normalize"
+
 /** Rich default markdown for public service detail pages (used in seed and when DB body is still the short template). */
 
 const SHARED_CLOSING = `
@@ -267,8 +269,8 @@ export function isThinServiceBody(bodyMd: string): boolean {
 }
 
 export function resolveServiceBodyMd(storedBodyMd: string, slug: string, shortDescription: string): string {
-  if (isThinServiceBody(storedBodyMd)) {
-    return getDefaultServiceBodyMd(slug, shortDescription)
-  }
-  return storedBodyMd
+  const body = isThinServiceBody(storedBodyMd)
+    ? getDefaultServiceBodyMd(slug, shortDescription)
+    : storedBodyMd
+  return normalizeMarkdown(body)
 }

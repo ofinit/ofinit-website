@@ -163,4 +163,9 @@
   .blog-article blockquote {
     @apply border-l-4 border-primary/40 pl-4 italic text-muted-foreground my-6;
   }
+
+  /* Fallback if markdown is rendered without custom components */
+  .public-markdown > * + * {
+    margin-top: 0;
+  }
 }

@@ -66,7 +66,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
             </Button>
           </div>
 
-          <div className="mt-10 prose-headings:scroll-mt-24">
+          <div className="mt-10">
             <PublicMarkdown markdown={svc.bodyMd} />
           </div>
 
