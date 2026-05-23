@@ -13,6 +13,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select"
 
 import type { GstParty } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
+import { changeAdminEmail, changeAdminPassword, getAdminAccountInfo } from "@/app/actions/admin-actions"
 import { loadSupplierProfileFromDb, saveSupplierProfileToDb } from "@/app/actions/gst-actions"
 
 export default function SettingsPage() {
@@ -46,11 +47,21 @@ export default function SettingsPage() {
     github: "https://github.com/ofinit",
   })
 
+  const [adminEmail, setAdminEmail] = useState<string | null>(null)
   const [securitySettings, setSecuritySettings] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
+  const [emailSettings, setEmailSettings] = useState({
+    newEmail: "",
+    confirmEmail: "",
+    currentPassword: "",
+  })
+  const [emailMessage, setEmailMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null)
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   const [smtpSettings, setSmtpSettings] = useState({
     smtpHost: "",
@@ -78,6 +89,12 @@ export default function SettingsPage() {
     loadSupplierProfileFromDb()
       .then((existing) => {
         if (existing) setSupplierProfile(existing)
+      })
+      .catch(() => {})
+
+    getAdminAccountInfo()
+      .then((info) => {
+        if (info) setAdminEmail(info.email)
       })
       .catch(() => {})
   }, [])
@@ -140,20 +157,46 @@ export default function SettingsPage() {
     alert("Social media settings saved successfully!")
   }
 
+  const handleChangeEmail = async () => {
+    setEmailMessage(null)
+    setSavingEmail(true)
+    const result = await changeAdminEmail({
+      newEmail: emailSettings.newEmail,
+      confirmEmail: emailSettings.confirmEmail,
+      currentPassword: emailSettings.currentPassword,
+    })
+    setSavingEmail(false)
+
+    if (!result.ok) {
+      setEmailMessage({ type: "error", text: result.error })
+      return
+    }
+
+    setAdminEmail(result.email)
+    setEmailSettings({ newEmail: "", confirmEmail: "", currentPassword: "" })
+    setEmailMessage({
+      type: "ok",
+      text: `Login email updated to ${result.email}. Use it the next time you sign in.`,
+    })
+  }
+
   const handleChangePassword = async () => {
-    if (securitySettings.newPassword !== securitySettings.confirmPassword) {
-      alert("New passwords do not match!")
+    setPasswordMessage(null)
+    setSavingPassword(true)
+    const result = await changeAdminPassword({
+      currentPassword: securitySettings.currentPassword,
+      newPassword: securitySettings.newPassword,
+      confirmPassword: securitySettings.confirmPassword,
+    })
+    setSavingPassword(false)
+
+    if (!result.ok) {
+      setPasswordMessage({ type: "error", text: result.error })
       return
     }
-    if (securitySettings.newPassword.length < 8) {
-      alert("Password must be at least 8 characters long!")
-      return
-    }
-    setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSaving(false)
+
     setSecuritySettings({ currentPassword: "", newPassword: "", confirmPassword: "" })
-    alert("Password changed successfully!")
+    setPasswordMessage({ type: "ok", text: "Password updated. Use the new password next time you sign in." })
   }
 
   const handleSaveSMTP = async () => {
@@ -531,9 +574,82 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-6">Change Password</h2>
-            <div className="space-y-6 max-w-md">
+          <Card className="p-6 space-y-10">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Login email</h2>
+              {adminEmail ? (
+                <p className="text-sm text-gray-600 mb-6">
+                  Current login email: <span className="font-medium text-gray-900">{adminEmail}</span>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600 mb-6">Change the email address used to sign in to the admin panel.</p>
+              )}
+              {emailMessage ? (
+                <p
+                  className={`text-sm mb-4 rounded-lg px-3 py-2 ${
+                    emailMessage.type === "ok" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                  }`}
+                >
+                  {emailMessage.text}
+                </p>
+              ) : null}
+              <div className="space-y-6 max-w-md">
+                <div>
+                  <Label htmlFor="newAdminEmail">New email address *</Label>
+                  <Input
+                    id="newAdminEmail"
+                    type="email"
+                    value={emailSettings.newEmail}
+                    onChange={(e) => setEmailSettings({ ...emailSettings, newEmail: e.target.value })}
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirmAdminEmail">Confirm new email *</Label>
+                  <Input
+                    id="confirmAdminEmail"
+                    type="email"
+                    value={emailSettings.confirmEmail}
+                    onChange={(e) => setEmailSettings({ ...emailSettings, confirmEmail: e.target.value })}
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="emailCurrentPassword">Current password *</Label>
+                  <Input
+                    id="emailCurrentPassword"
+                    type="password"
+                    value={emailSettings.currentPassword}
+                    onChange={(e) => setEmailSettings({ ...emailSettings, currentPassword: e.target.value })}
+                    placeholder="Confirm with your password"
+                    autoComplete="current-password"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleChangeEmail} disabled={savingEmail || savingPassword}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {savingEmail ? "Updating..." : "Update login email"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t pt-10">
+              <h2 className="text-xl font-semibold mb-6">Change password</h2>
+              {passwordMessage ? (
+                <p
+                  className={`text-sm mb-4 rounded-lg px-3 py-2 ${
+                    passwordMessage.type === "ok"
+                      ? "bg-green-50 text-green-800"
+                      : "bg-red-50 text-red-800"
+                  }`}
+                >
+                  {passwordMessage.text}
+                </p>
+              ) : null}
+              <div className="space-y-6 max-w-md">
               <div>
                 <Label htmlFor="currentPassword">Current Password *</Label>
                 <Input
@@ -569,11 +685,12 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleChangePassword} disabled={saving}>
+                <Button onClick={handleChangePassword} disabled={savingPassword || savingEmail}>
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? "Changing..." : "Change Password"}
+                  {savingPassword ? "Changing..." : "Change Password"}
                 </Button>
               </div>
+            </div>
             </div>
           </Card>
         </TabsContent>

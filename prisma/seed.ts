@@ -10,11 +10,12 @@ import { getDefaultServices } from "../lib/services/defaults"
 const prisma = new PrismaClient()
 
 async function main() {
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@ofinit.com").trim().toLowerCase()
   const passwordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || "admin123", 10)
   await prisma.adminUser.upsert({
-    where: { email: "admin@ofinit.com" },
+    where: { email: adminEmail },
     create: {
-      email: "admin@ofinit.com",
+      email: adminEmail,
       passwordHash,
     },
     update: { passwordHash },

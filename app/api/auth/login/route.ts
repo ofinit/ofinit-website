@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import bcrypt from "bcryptjs"
+import { adminSessionCookieOptions } from "@/lib/auth/admin-session"
 import { prisma } from "@/lib/db/prisma"
 import { redirectTo } from "@/lib/request-origin"
 
@@ -15,12 +16,9 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set("admin_authenticated", "true", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-    })
+    const session = adminSessionCookieOptions()
+    cookieStore.set("admin_authenticated", "true", session)
+    cookieStore.set("admin_email", user.email, session)
 
     return redirectTo(request, "/admin")
   } catch (e) {
