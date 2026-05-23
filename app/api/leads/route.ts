@@ -34,12 +34,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", fieldErrors }, { status: 400 })
     }
 
-    const { name, email, company, phone, message } = parsed.data
+    const { name, email, company, phone, message, source } = parsed.data
     const emailNorm = email.trim().toLowerCase()
+    const leadSource = source ?? "contact"
 
     await prisma.leadSubmission.create({
       data: {
-        source: "contact",
+        source: leadSource,
         name,
         email: emailNorm,
         company: company?.trim() || null,

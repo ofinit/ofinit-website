@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { BlogNewsletterForm } from "@/components/blog-newsletter-form"
 import Link from "next/link"
 import { getPublishedBlogPostsForPublic } from "@/lib/blog/queries"
+import { blogPostHref } from "@/lib/blog/paths"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
 import { Suspense } from "react"
 import { BlogNewsletterToast } from "@/components/blog-newsletter-toast"
@@ -86,7 +87,7 @@ export default async function BlogPage() {
                           <span>{post.readTime}</span>
                         </div>
                       </div>
-                      <Link href={`/blog/${post.id}`}>
+                      <Link href={blogPostHref(post)}>
                         <Button variant="ghost" className="w-full group/btn">
                           Read More
                           <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />

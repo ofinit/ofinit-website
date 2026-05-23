@@ -17,9 +17,14 @@ type FieldErrors = Partial<Record<"name" | "email" | "company" | "phone" | "mess
 type ContactLeadFormProps = {
   serviceName?: string
   messagePlaceholder?: string
+  leadSource?: "contact" | "blog" | "service"
 }
 
-export function ContactLeadForm({ serviceName, messagePlaceholder }: ContactLeadFormProps = {}) {
+export function ContactLeadForm({
+  serviceName,
+  messagePlaceholder,
+  leadSource = "contact",
+}: ContactLeadFormProps = {}) {
   const defaultMessage = serviceName
     ? `I'm interested in ${serviceName}.\n\n`
     : ""
@@ -51,6 +56,7 @@ export function ContactLeadForm({ serviceName, messagePlaceholder }: ContactLead
       phone: String(fd.get("phone") ?? ""),
       message: String(fd.get("message") ?? ""),
       consent,
+      source: leadSource,
       _gotcha: String(fd.get("_gotcha") ?? ""),
       ...(turnstileToken ? { turnstileToken } : {}),
     }

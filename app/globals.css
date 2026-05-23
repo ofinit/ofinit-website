@@ -123,3 +123,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Blog article HTML (headings, lists, links) — prose plugin not required */
+@layer components {
+  .blog-article {
+    @apply text-foreground leading-relaxed;
+  }
+  .blog-article > * + * {
+    margin-top: 1rem;
+  }
+  .blog-article h2 {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight mt-10 mb-4 text-foreground;
+  }
+  .blog-article h3 {
+    @apply text-xl font-semibold mt-8 mb-3 text-foreground;
+  }
+  .blog-article p {
+    @apply text-base leading-7 text-foreground/90 mb-4;
+  }
+  .blog-article ul,
+  .blog-article ol {
+    @apply my-4 pl-6 space-y-2;
+  }
+  .blog-article ul {
+    list-style-type: disc;
+  }
+  .blog-article ol {
+    list-style-type: decimal;
+  }
+  .blog-article li {
+    @apply leading-7 text-foreground/90;
+  }
+  .blog-article a {
+    @apply text-primary font-medium underline-offset-4 hover:underline;
+  }
+  .blog-article strong {
+    @apply font-semibold text-foreground;
+  }
+  .blog-article blockquote {
+    @apply border-l-4 border-primary/40 pl-4 italic text-muted-foreground my-6;
+  }
+}

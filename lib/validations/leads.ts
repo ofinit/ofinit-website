@@ -10,6 +10,7 @@ export const contactLeadSchema = z
     phone: z.string().trim().max(40).optional(),
     message: z.string().trim().min(10, "Please add a bit more detail (at least 10 characters)").max(5000),
     consent: z.boolean().refine((v) => v === true, { message: "Please accept to continue" }),
+    source: z.enum(["contact", "blog", "service"]).optional(),
     _gotcha: z.string().optional(),
   })
   .superRefine((val, ctx) => {

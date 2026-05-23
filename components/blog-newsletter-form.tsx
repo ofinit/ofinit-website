@@ -11,7 +11,12 @@ import { SpamChallenge } from "@/components/spam-challenge"
 import { usePublicCsrf } from "@/hooks/use-public-csrf"
 import { useTurnstileSiteKey } from "@/hooks/use-turnstile-site-key"
 
-export function BlogNewsletterForm() {
+type BlogNewsletterFormProps = {
+  variant?: "default" | "compact"
+}
+
+export function BlogNewsletterForm({ variant = "default" }: BlogNewsletterFormProps) {
+  const compact = variant === "compact"
   const { token: csrfToken, ready: csrfReady, getFetchInit } = usePublicCsrf()
   const { siteKey: turnstileSiteKey, configured: turnstileConfigured, loading: turnstileLoading } =
     useTurnstileSiteKey()
@@ -74,17 +79,28 @@ export function BlogNewsletterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 max-w-md mx-auto text-left">
+    <form
+      onSubmit={onSubmit}
+      className={compact ? "space-y-3 text-left" : "space-y-4 max-w-md mx-auto text-left"}
+    >
       <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" className="absolute opacity-0 pointer-events-none h-0 w-0" aria-hidden />
 
       <div key={turnstileKey} className="flex justify-center">
         <SpamChallenge siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Input name="email" type="email" required placeholder="you@company.com" autoComplete="email" disabled={pending} className="flex-1" />
-        <Button type="submit" disabled={pending || turnstileLoading || !canSubmit}>
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe"}
+      <div className={compact ? "space-y-2" : "flex flex-col sm:flex-row gap-2"}>
+        <Input
+          name="email"
+          type="email"
+          required
+          placeholder="you@company.com"
+          autoComplete="email"
+          disabled={pending}
+          className={compact ? "w-full" : "flex-1"}
+        />
+        <Button type="submit" disabled={pending || turnstileLoading || !canSubmit} className={compact ? "w-full" : undefined}>
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : compact ? "Subscribe now" : "Subscribe"}
         </Button>
       </div>
 

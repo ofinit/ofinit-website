@@ -32,6 +32,7 @@ export function ServiceLeadSection({ serviceName }: Props) {
           <CardContent className="pt-4">
             <ContactLeadForm
               serviceName={serviceName}
+              leadSource="service"
               messagePlaceholder={`Tell us about your ${serviceName} needs — goals, timeline, and any links to references.`}
             />
           </CardContent>

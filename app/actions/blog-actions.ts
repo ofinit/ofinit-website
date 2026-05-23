@@ -118,7 +118,7 @@ export async function updateBlogPost(id: string, formData: FormData) {
     })
 
     revalidatePath("/blog")
-    revalidatePath(`/blog/${id}`)
+    revalidatePath(`/blog/${post.slug}`)
     revalidatePath("/admin/blogs")
 
     return { success: true }
@@ -138,6 +138,7 @@ export async function deleteBlogPost(id: string) {
     await prisma.blogPost.delete({ where: { id } })
 
     revalidatePath("/blog")
+    revalidatePath(`/blog/${existing.slug}`)
     revalidatePath("/admin/blogs")
 
     return { success: true }
