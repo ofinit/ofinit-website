@@ -2,6 +2,7 @@ import type { BlogPost } from "@/lib/blog-data"
 import { blogPostCanonicalUrl } from "@/lib/blog/paths"
 import { getExpandedSectionsForSlug } from "@/lib/blog/expanded-sections"
 import { countWordsFromHtml, readTimeFromWordCount } from "@/lib/blog/word-count"
+import { resolveBlogImageUrl } from "@/lib/blog/resolve-image"
 
 const MIN_SEO_WORDS = 900
 
@@ -57,9 +58,13 @@ export function resolveBlogContent(slug: string, storedContent: string): string 
 export function enrichBlogPost(post: BlogPost): BlogPost {
   const content = resolveBlogContent(post.slug, post.content)
   const words = countWordsFromHtml(content)
+  const image = resolveBlogImageUrl(post.slug, post.image)
   return {
     ...post,
     content,
+    image,
+    ogImage: post.ogImage?.trim() || image,
+    twitterImage: post.twitterImage?.trim() || image,
     readTime: readTimeFromWordCount(words),
     canonicalUrl: post.canonicalUrl?.trim() || blogPostCanonicalUrl(post),
   }

@@ -1,14 +1,9 @@
 import type { Metadata } from "next"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { BlogNewsletterForm } from "@/components/blog-newsletter-form"
-import Link from "next/link"
+import { BlogPostCard } from "@/components/blog-post-card"
 import { getPublishedBlogPostsForPublic } from "@/lib/blog/queries"
-import { blogPostHref } from "@/lib/blog/paths"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
 import { Suspense } from "react"
 import { BlogNewsletterToast } from "@/components/blog-newsletter-toast"
@@ -61,40 +56,7 @@ export default async function BlogPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogPosts.map((post) => (
-                  <Card key={post.id} className="group hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
-                    <div className="bg-muted relative overflow-hidden aspect-video">
-                      <img
-                        src={post.image || "/placeholder.svg"}
-                        alt={post.imageAlt || post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge variant="secondary">{post.category}</Badge>
-                      </div>
-                      <CardTitle className="group-hover:text-primary transition-colors">{post.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="mt-auto">
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{post.publishedAt}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{post.readTime}</span>
-                        </div>
-                      </div>
-                      <Link href={blogPostHref(post)}>
-                        <Button variant="ghost" className="w-full group/btn">
-                          Read More
-                          <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                  <BlogPostCard key={post.id} post={post} />
                 ))}
               </div>
             )}

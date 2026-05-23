@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { BlogPostCard } from "@/components/blog-post-card"
 import { Calendar, Clock, ArrowLeft, Share2, Tag, Home, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -217,7 +217,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <div className="min-w-0">
                 <figure className="aspect-video bg-muted rounded-xl overflow-hidden mb-10 shadow-md">
                   <img
-                    src={post.image || "/placeholder.svg"}
+                    src={post.image}
                     alt={post.imageAlt || `Featured image for ${post.title}`}
                     className="w-full h-full object-cover"
                     loading="eager"
@@ -261,31 +261,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {relatedPosts.map((relatedPost) => (
-                  <Card key={relatedPost.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
-                    <div className="aspect-video bg-muted relative overflow-hidden">
-                      <img
-                        src={relatedPost.image || "/placeholder.svg"}
-                        alt={relatedPost.imageAlt || relatedPost.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        width={400}
-                        height={225}
-                      />
-                    </div>
-                    <CardHeader>
-                      <Badge variant="secondary" className="w-fit mb-2">
-                        {relatedPost.category}
-                      </Badge>
-                      <CardTitle className="text-lg line-clamp-2">{relatedPost.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href={blogPostHref(relatedPost)}>
-                        <Button variant="ghost" className="w-full">
-                          Read more
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                  <BlogPostCard key={relatedPost.id} post={relatedPost} />
                 ))}
               </div>
             </div>
