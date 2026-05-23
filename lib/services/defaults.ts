@@ -1,4 +1,5 @@
 import { getDefaultSiteContent } from "@/lib/site-content/defaults"
+import { getDefaultServiceBodyMd } from "@/lib/services/default-bodies"
 import { serviceSlugFromName } from "./slug"
 
 export type DefaultService = {
@@ -16,7 +17,7 @@ export function getDefaultServices(): DefaultService[] {
     slug: serviceSlugFromName(it.title),
     name: it.title,
     shortDescription: it.description,
-    bodyMd: `## Overview\n${it.description}\n\n## What we deliver\n- Discovery & planning\n- Design & implementation\n- Testing & launch\n- Support & iteration\n`,
+    bodyMd: getDefaultServiceBodyMd(serviceSlugFromName(it.title), it.description),
     sortOrder: i,
     published: true,
   }))

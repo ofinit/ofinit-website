@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +13,21 @@ import { Suspense } from "react"
 import { BlogNewsletterToast } from "@/components/blog-newsletter-toast"
 
 export const dynamic = "force-dynamic"
+
+export const metadata: Metadata = {
+  title: "Blog & Insights | OfinIT",
+  description:
+    "Articles on UI/UX, web development, custom software, mobile apps, AI integration, and DevOps—practical guides to help your team ship and grow.",
+  keywords: [
+    "OfinIT blog",
+    "web development",
+    "UI UX",
+    "custom software",
+    "mobile apps",
+    "AI integration",
+    "DevOps",
+  ],
+}
 
 export default async function BlogPage() {
   const [blogPosts, site] = await Promise.all([getPublishedBlogPostsForPublic(), loadPublicSiteContent()])

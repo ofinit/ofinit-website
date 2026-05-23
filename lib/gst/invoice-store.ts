@@ -1,4 +1,5 @@
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
+import { getDefaultGstSupplier, mergeGstSupplierWithDefaults } from "@/lib/gst/supplier-defaults"
 
 export function createId(): string {
   return `inv_${Date.now()}_${Math.random().toString(16).slice(2)}`
@@ -37,16 +38,7 @@ export function nextInvoiceNo(now = new Date(), invoices: GstInvoice[] = []): st
   return `INV/${fy}/${String(next).padStart(4, "0")}`
 }
 
-const defaultSupplier = (): GstParty => ({
-  legalName: "OfinIT Solutions Pvt. Ltd.",
-  addressLine1: "",
-  city: "",
-  country: "India",
-  state: "",
-  stateCode: "27",
-  pinCode: "",
-  gstin: "",
-})
+const defaultSupplier = (): GstParty => getDefaultGstSupplier()
 
 export function createBlankInvoice(params?: {
   now?: Date
@@ -59,7 +51,7 @@ export function createBlankInvoice(params?: {
   const today = now.toISOString().slice(0, 10)
   const id = createId()
   const existingInvoices = params?.existingInvoices ?? []
-  const supplier = params?.supplier ? { ...params.supplier } : defaultSupplier()
+  const supplier = mergeGstSupplierWithDefaults(params?.supplier ?? defaultSupplier())
 
   const buyer: GstParty = {
     legalName: "",

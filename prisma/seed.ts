@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
-import { blogPosts } from "../lib/blog-data"
+import { getAllSeedBlogPosts } from "../lib/blog/seed-posts"
 import { categories } from "../lib/categories-data"
 import { caseStudiesData } from "../lib/case-studies-data"
 import { getDefaultPublicPage } from "../lib/public-pages/defaults"
@@ -39,7 +39,7 @@ async function main() {
     })
   }
 
-  for (const post of blogPosts) {
+  for (const post of getAllSeedBlogPosts()) {
     await prisma.blogPost.upsert({
       where: { id: post.id },
       create: {

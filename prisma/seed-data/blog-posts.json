@@ -1,0 +1,225 @@
+[
+  {
+    "id": "1",
+    "title": "The Future of AI Integration in Business Applications",
+    "slug": "future-ai-integration-business-applications",
+    "excerpt": "Discover how artificial intelligence is transforming business operations and creating new opportunities for growth and innovation.",
+    "category": "AI & Machine Learning",
+    "author": {
+      "name": "Sarah Johnson",
+      "role": "AI Solutions Architect",
+      "avatar": "/professional-woman-diverse.png"
+    },
+    "publishedAt": "March 15, 2024",
+    "readTime": "8 min read",
+    "image": "/ai-business-integration-dashboard.jpg",
+    "imageAlt": "AI integration in business applications dashboard",
+    "metaTitle": "The Future of AI Integration in Business Applications | OfinIT Blog",
+    "metaDescription": "Explore how AI is revolutionizing business operations. Learn about practical AI integration strategies, benefits, and implementation best practices.",
+    "metaKeywords": [
+      "AI integration",
+      "business applications",
+      "artificial intelligence",
+      "machine learning",
+      "automation"
+    ],
+    "featured": true,
+    "status": "published",
+    "content": "\n      <p>Artificial intelligence is no longer a futuristic concept—it's a present-day reality transforming how businesses operate. From automating routine tasks to providing deep insights through data analysis, AI integration is becoming essential for companies looking to stay competitive.</p>\n      \n      <h2>Why AI Integration Matters</h2>\n      <p>In today's fast-paced business environment, AI offers unprecedented opportunities to improve efficiency, reduce costs, and enhance customer experiences. Companies that successfully integrate AI into their operations are seeing significant returns on investment.</p>\n      \n      <h2>Key Areas of AI Integration</h2>\n      \n      <h3>1. Customer Service Automation</h3>\n      <p>AI-powered chatbots and virtual assistants can handle customer inquiries 24/7, providing instant responses and freeing up human agents for complex issues.</p>\n      \n      <h3>2. Predictive Analytics</h3>\n      <p>Machine learning algorithms analyze historical data to predict future trends, helping businesses make informed decisions about inventory, staffing, and strategy.</p>\n      \n      <h3>3. Process Automation</h3>\n      <p>Robotic Process Automation (RPA) combined with AI can handle repetitive tasks with greater accuracy and speed than manual processes.</p>\n      \n      <h2>Getting Started with AI Integration</h2>\n      <p>Begin by identifying processes that would benefit most from automation. Start small with pilot projects, measure results, and scale successful implementations across your organization.</p>\n      \n      <p>At OfinIT, we specialize in helping businesses navigate their AI integration journey, from strategy development to implementation and ongoing optimization.</p>\n    "
+  },
+  {
+    "id": "2",
+    "title": "Building Scalable Mobile Apps in 2024",
+    "slug": "building-scalable-mobile-apps-2024",
+    "excerpt": "Learn the best practices and architectural patterns for creating mobile applications that can scale to millions of users.",
+    "category": "Mobile Development",
+    "author": {
+      "name": "Michael Chen",
+      "role": "Mobile Development Lead",
+      "avatar": "/professional-man.jpg"
+    },
+    "publishedAt": "March 5, 2024",
+    "readTime": "10 min read",
+    "image": "/mobile-app-development-architecture.jpg",
+    "imageAlt": "Mobile app development architecture diagram",
+    "metaTitle": "Building Scalable Mobile Apps in 2024: Best Practices | OfinIT",
+    "metaDescription": "Master mobile app scalability with modern architecture patterns, performance optimization techniques, and best practices for 2024.",
+    "metaKeywords": [
+      "mobile app development",
+      "scalability",
+      "React Native",
+      "Flutter",
+      "app architecture"
+    ],
+    "featured": false,
+    "status": "published",
+    "content": "\n      <p>Building a mobile app is one thing; building a mobile app that can scale to millions of users while maintaining performance and reliability is another challenge entirely. In 2024, scalability isn't just a nice-to-have—it's essential for success.</p>\n      \n      <h2>Architecture Matters</h2>\n      <p>The foundation of any scalable mobile app is its architecture. Modern mobile apps should follow clean architecture principles, separating concerns and making the codebase maintainable as it grows. Consider using MVVM or Clean Architecture patterns that promote testability and flexibility.</p>\n      \n      <h2>Cross-Platform vs Native</h2>\n      <p>The debate between cross-platform and native development continues, but in 2024, frameworks like React Native and Flutter have matured significantly. For most businesses, cross-platform development offers the best balance of performance, development speed, and cost-effectiveness.</p>\n      \n      <h2>Backend Infrastructure</h2>\n      <p>Your mobile app is only as scalable as your backend. Implement microservices architecture, use cloud-native technologies, and design APIs that can handle increasing loads. Consider serverless architectures for specific functions to optimize costs and scalability.</p>\n      \n      <h2>Performance Optimization</h2>\n      <p>Users expect apps to be fast and responsive. Implement lazy loading, optimize images, use efficient data structures, and minimize network requests. Monitor performance metrics continuously and address bottlenecks proactively.</p>\n      \n      <h2>Security at Scale</h2>\n      <p>As your user base grows, so does your security responsibility. Implement robust authentication, encrypt sensitive data, and follow security best practices from day one. Regular security audits become increasingly important as you scale.</p>\n      \n      <p>At OfinIT, we specialize in building mobile applications that are designed for scale from the ground up. Our experienced team can help you make the right architectural decisions and implement best practices that ensure your app can grow with your business.</p>\n    "
+  },
+  {
+    "id": "svc-blog-ui-ux",
+    "title": "UI/UX Design for B2B SaaS: Research, Systems, and Handoff That Scales",
+    "slug": "ui-ux-design-b2b-saas-research-systems-handoff",
+    "excerpt": "How structured UX research, design systems, and developer-ready specs reduce rework and improve activation for B2B products.",
+    "category": "UI/UX Design",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "May 18, 2025",
+    "readTime": "7 min read",
+    "image": "/placeholder.jpg",
+    "imageAlt": "UI UX design workshop and interface screens",
+    "metaTitle": "UI/UX Design for B2B SaaS: Research, Systems, and Handoff That Scales | OfinIT Blog",
+    "metaDescription": "How structured UX research, design systems, and developer-ready specs reduce rework and improve activation for B2B products.",
+    "metaKeywords": [
+      "UI UX design",
+      "B2B SaaS design",
+      "design systems",
+      "product design agency",
+      "Figma handoff"
+    ],
+    "featured": true,
+    "status": "published",
+    "content": "<p>Great B2B SaaS products are won in the workflows—not just the marketing site. Teams that invest in UI/UX early ship features users understand on day one, support fewer tickets, and see better trial-to-paid conversion.</p>\n<h2>Start with jobs-to-be-done, not wireframes</h2>\n<p>Interview power users and internal stakeholders, map the critical paths (onboarding, billing, reporting), and rank friction by revenue impact. A lightweight research sprint prevents expensive UI debates later.</p>\n<h2>Design systems pay off on the third feature</h2>\n<p>Tokens for color, type, spacing, and components in Figma (or your tool) keep marketing and product visually aligned. Document states: empty, loading, error, and permissions—engineering will need them.</p>\n<h2>Prototype before you commit to build</h2>\n<p>Clickable flows validate assumptions with five to eight users. Fix navigation and copy early; pixels are cheap, sprints are not.</p>\n<h2>Handoff that engineers trust</h2>\n<p>Annotated specs, responsive rules, and accessibility notes (focus order, labels, contrast) reduce back-and-forth. Pair designers with devs during implementation for edge cases.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/ui-ux-design\">UI/UX Design service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  },
+  {
+    "id": "svc-blog-web",
+    "title": "Next.js for Business Websites: Performance, SEO, and Content Teams",
+    "slug": "nextjs-business-websites-performance-seo",
+    "excerpt": "Why modern React frameworks like Next.js help marketing sites rank faster, load quicker, and stay editable without developer bottlenecks.",
+    "category": "Web Development",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "May 12, 2025",
+    "readTime": "6 min read",
+    "image": "/placeholder.jpg",
+    "imageAlt": "Modern web development and analytics dashboard",
+    "metaTitle": "Next.js for Business Websites: Performance, SEO, and Content Teams | OfinIT Blog",
+    "metaDescription": "Why modern React frameworks like Next.js help marketing sites rank faster, load quicker, and stay editable without developer bottlenecks.",
+    "metaKeywords": [
+      "Next.js agency",
+      "business website development",
+      "Core Web Vitals",
+      "SEO web development",
+      "OfinIT"
+    ],
+    "featured": false,
+    "status": "published",
+    "content": "<p>Your website is still your highest-trust channel. Slow pages, poor mobile scores, and stale content hurt both SEO and sales. A well-built Next.js site addresses all three.</p>\n<h2>Performance is a ranking signal</h2>\n<p>Optimize images, fonts, and server rendering so Largest Contentful Paint stays in the green. Fast sites convert better on paid traffic too—not only organic.</p>\n<h2>SEO built into the architecture</h2>\n<p>Semantic HTML, metadata per route, structured data, and clean URLs should be defaults. Blog and service pages need unique titles and descriptions aligned with intent.</p>\n<h2>Editors need safe, fast publishing</h2>\n<p>Pair engineering with CMS fields or admin tools so marketing can update copy without deploys. Preview environments catch mistakes before production.</p>\n<h2>Integrate leads where readers convert</h2>\n<p>Place protected inquiry forms on service and blog pages, not only a distant contact link. Track referrers to see which content drives pipeline.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/web-development\">Web Development service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  },
+  {
+    "id": "svc-blog-software",
+    "title": "Custom Software vs Off-the-Shelf: A Practical Decision Framework",
+    "slug": "custom-software-vs-off-the-shelf-framework",
+    "excerpt": "When bespoke platforms beat SaaS sprawl—and how to scope MVPs, integrations, and long-term ownership.",
+    "category": "Software Development",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "May 5, 2025",
+    "readTime": "8 min read",
+    "image": "/placeholder.jpg",
+    "imageAlt": "Custom software architecture planning",
+    "metaTitle": "Custom Software vs Off-the-Shelf: A Practical Decision Framework | OfinIT Blog",
+    "metaDescription": "When bespoke platforms beat SaaS sprawl—and how to scope MVPs, integrations, and long-term ownership.",
+    "metaKeywords": [
+      "custom software development",
+      "enterprise software",
+      "MVP development",
+      "system integration"
+    ],
+    "featured": false,
+    "status": "published",
+    "content": "<p>Buying another subscription is easy; fixing fragmented data across twelve tools is not. Custom software makes sense when your process is the competitive advantage.</p>\n<h2>Signals you need a custom build</h2>\n<ul>\n<li>Unique workflow rules that no vendor will prioritize</li>\n<li>Heavy integration with ERP, logistics, or legacy APIs</li>\n<li>Compliance or data residency requirements</li>\n<li>Revenue scale where license fees exceed build cost</li>\n</ul>\n<h2>Scope an MVP that proves ROI in 90 days</h2>\n<p>Ship the smallest end-to-end slice—one user role, one integration, one report. Measure hours saved or error reduction, then expand.</p>\n<h2>Own your roadmap</h2>\n<p>Open code, documented APIs, and automated tests beat black-box platforms when you need to move fast without vendor roadmaps.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/software-development\">Software Development service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  },
+  {
+    "id": "svc-blog-mobile",
+    "title": "Mobile App Development in 2025: Cross-Platform, Offline, and Store Readiness",
+    "slug": "mobile-app-development-2025-cross-platform-offline",
+    "excerpt": "What to plan before you build—platform choice, offline sync, push, analytics, and App Store / Play compliance.",
+    "category": "Mobile Development",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "April 28, 2025",
+    "readTime": "9 min read",
+    "image": "/mobile-app-development-architecture.jpg",
+    "imageAlt": "Mobile application architecture on devices",
+    "metaTitle": "Mobile App Development in 2025: Cross-Platform, Offline, and Store Readiness | OfinIT Blog",
+    "metaDescription": "What to plan before you build—platform choice, offline sync, push, analytics, and App Store / Play compliance.",
+    "metaKeywords": [
+      "mobile app development",
+      "React Native",
+      "Flutter",
+      "app store launch",
+      "offline mobile apps"
+    ],
+    "featured": false,
+    "status": "published",
+    "content": "<p>Mobile users expect speed, reliability, and respect for their battery and data. Shipping a web wrapper is rarely enough for field teams or consumer retention.</p>\n<h2>Choose cross-platform with intent</h2>\n<p>React Native and Flutter are mature for many B2B and B2C cases. Go native when you need deep OS features or maximum graphics performance.</p>\n<h2>Design for offline and sync</h2>\n<p>Queue actions locally, resolve conflicts clearly, and show sync status. Field apps fail when staff cannot work without perfect LTE.</p>\n<h2>Plan store submission early</h2>\n<p>Privacy nutrition labels, account deletion, and crash-free sessions matter for approval. Budget time for review feedback and staged rollouts.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/mobile-app-development\">Mobile App Development service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  },
+  {
+    "id": "svc-blog-ai",
+    "title": "Practical AI Integration for Operations: RAG, Guardrails, and ROI",
+    "slug": "practical-ai-integration-operations-rag-roi",
+    "excerpt": "How to pilot LLM workflows on your data—with human review, cost controls, and measurable outcomes.",
+    "category": "AI & Machine Learning",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "April 20, 2025",
+    "readTime": "7 min read",
+    "image": "/ai-business-integration-dashboard.jpg",
+    "imageAlt": "AI integration dashboard for business operations",
+    "metaTitle": "Practical AI Integration for Operations: RAG, Guardrails, and ROI | OfinIT Blog",
+    "metaDescription": "How to pilot LLM workflows on your data—with human review, cost controls, and measurable outcomes.",
+    "metaKeywords": [
+      "AI integration",
+      "RAG",
+      "LLM business",
+      "process automation",
+      "enterprise AI"
+    ],
+    "featured": true,
+    "status": "published",
+    "content": "<p>Leaders are under pressure to “do AI” without clear use cases. The wins are usually narrow: support triage, document extraction, internal search, or drafting—not replacing entire departments overnight.</p>\n<h2>Anchor on a measurable workflow</h2>\n<p>Pick a process with volume and clear success metrics—minutes saved, error rate, or cost per ticket. Run a four-week pilot on real samples.</p>\n<h2>RAG beats generic chat for proprietary knowledge</h2>\n<p>Index policies, manuals, and tickets in a vector store with access controls. Answers should cite sources and refuse when confidence is low.</p>\n<h2>Keep humans in the loop</h2>\n<p>High-stakes decisions need review queues, audit logs, and escalation paths. Automate drafts, not accountability.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/ai-integration\">AI Integration service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  },
+  {
+    "id": "svc-blog-devops",
+    "title": "DevOps and CI/CD: Ship Faster Without Breaking Production",
+    "slug": "devops-cicd-ship-faster-safely",
+    "excerpt": "Pipelines, infrastructure as code, observability, and rollback patterns for teams tired of manual deploy stress.",
+    "category": "DevOps & Cloud",
+    "author": {
+      "name": "OfinIT Editorial",
+      "role": "Technology & Delivery",
+      "avatar": "/author-writing.png"
+    },
+    "publishedAt": "April 14, 2025",
+    "readTime": "6 min read",
+    "image": "/placeholder.jpg",
+    "imageAlt": "DevOps pipeline and cloud infrastructure",
+    "metaTitle": "DevOps and CI/CD: Ship Faster Without Breaking Production | OfinIT Blog",
+    "metaDescription": "Pipelines, infrastructure as code, observability, and rollback patterns for teams tired of manual deploy stress.",
+    "metaKeywords": [
+      "DevOps services",
+      "CI/CD",
+      "Kubernetes",
+      "infrastructure as code",
+      "site reliability"
+    ],
+    "featured": false,
+    "status": "published",
+    "content": "<p>Manual deploys do not scale with customer expectations. A solid DevOps foundation reduces downtime, security incidents, and engineer burnout.</p>\n<h2>Automate the path to production</h2>\n<p>Tests, lint, security scans, and staged promotions should run on every merge. Preview URLs help reviewers see changes live.</p>\n<h2>Infrastructure as code for repeatability</h2>\n<p>Terraform or Pulumi modules document environments. Drift detection keeps staging close to prod.</p>\n<h2>Observe what matters</h2>\n<p>Metrics, logs, and traces tied to SLOs—not vanity dashboards. Run game days on backups and restores before you need them.</p>\n<p><strong>Ready to talk?</strong> Explore our <a href=\"/services/devops-services\">DevOps Services service</a> or <a href=\"/#contact\">start a project inquiry</a>—we typically reply within one business day.</p>"
+  }
+]

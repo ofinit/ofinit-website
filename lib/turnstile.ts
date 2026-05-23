@@ -1,10 +1,14 @@
+import { getTurnstileSecretKey, isTurnstileVerificationRequired } from "@/lib/turnstile/config"
+
 /**
- * Optional Cloudflare Turnstile verification.
- * Set TURNSTILE_SECRET_KEY in env; send `turnstileToken` from the client widget.
+ * Cloudflare Turnstile server verification.
+ * Secret key: Admin → Settings → Turnstile, or TURNSTILE_SECRET_KEY env.
  * @see https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
  */
 export async function verifyTurnstileToken(token: string | undefined, remoteip?: string): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY
+  if (!(await isTurnstileVerificationRequired())) return true
+
+  const secret = await getTurnstileSecretKey()
   if (!secret) return true
 
   if (!token?.trim()) return false

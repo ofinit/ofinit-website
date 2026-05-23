@@ -2,7 +2,10 @@
 
 import { prisma } from "@/lib/db/prisma"
 import { assertAdminAuthenticated } from "@/lib/auth/admin-session"
+import { sendGstInvoiceEmail } from "@/lib/email/gst-invoice-email"
 import type { GstInvoice, GstParty } from "@/lib/gst/invoice"
+import { mergeGstSupplierWithDefaults } from "@/lib/gst/supplier-defaults"
+import { renderInvoicePdfBuffer } from "@/lib/gst/render-invoice-pdf"
 
 const GST_BUYERS_KEY = "gst_buyers"
 const GST_HSN_KEY = "gst_hsn_list"
@@ -71,11 +74,20 @@ export async function loadGstWorkspace(): Promise<GstWorkspaceLoadResult> {
     const invoices = invoiceRows.map((r) => r.payload as GstInvoice)
     const buyers = Array.isArray(buyersRaw) ? (buyersRaw as GstParty[]) : []
     const hsnList = Array.isArray(hsnRaw) ? (hsnRaw as string[]) : []
-    const supplier = supplierRaw && typeof supplierRaw === "object" && supplierRaw !== null ? (supplierRaw as GstParty) : null
+    const supplier =
+      supplierRaw && typeof supplierRaw === "object" && supplierRaw !== null
+        ? mergeGstSupplierWithDefaults(supplierRaw as GstParty)
+        : mergeGstSupplierWithDefaults(null)
     return { ok: true, data: { invoices, buyers, hsnList, supplier } }
   } catch (e) {
     return { ok: false, error: formatGstLoadError(e) }
   }
+}
+
+export type GstInvoiceActionResult = { ok: true } | { ok: false; error: string }
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export async function saveGstInvoice(invoice: GstInvoice) {
@@ -86,6 +98,44 @@ export async function saveGstInvoice(invoice: GstInvoice) {
     create: { id: invoice.id, payload },
     update: { payload },
   })
+}
+
+/** Saves invoice, then emails PDF to buyer.email (requires SMTP_* env). */
+export async function saveAndSendGstInvoice(invoice: GstInvoice): Promise<GstInvoiceActionResult> {
+  try {
+    await assertAdminAuthenticated()
+  } catch {
+    return { ok: false, error: "Your session expired. Sign in again." }
+  }
+
+  const email = invoice.buyer.email?.trim() ?? ""
+  if (!email) {
+    return { ok: false, error: "Add the buyer's email address before sending." }
+  }
+  if (!isValidEmail(email)) {
+    return { ok: false, error: "Enter a valid buyer email address." }
+  }
+
+  try {
+    await saveGstInvoice(invoice)
+    await upsertGstBuyer(invoice.buyer)
+
+    const pdfBuffer = await renderInvoicePdfBuffer(invoice)
+    const result = await sendGstInvoiceEmail({
+      to: email,
+      invoice,
+      pdfBuffer,
+    })
+
+    if (!result.sent) {
+      return { ok: false, error: result.error ?? "Could not send email." }
+    }
+
+    return { ok: true }
+  } catch (e) {
+    console.error("[saveAndSendGstInvoice]", e)
+    return { ok: false, error: e instanceof Error ? e.message : "Save or send failed." }
+  }
 }
 
 export async function deleteGstInvoice(id: string) {
@@ -122,7 +172,9 @@ export async function addGstHsn(value: string) {
 export async function loadSupplierProfileFromDb(): Promise<GstParty | null> {
   await assertAdminAuthenticated()
   const raw = await getJsonSetting(GST_SUPPLIER_KEY)
-  return raw && typeof raw === "object" && raw !== null ? (raw as GstParty) : null
+  return raw && typeof raw === "object" && raw !== null
+    ? mergeGstSupplierWithDefaults(raw as GstParty)
+    : mergeGstSupplierWithDefaults(null)
 }
 
 export async function saveSupplierProfileToDb(party: GstParty) {

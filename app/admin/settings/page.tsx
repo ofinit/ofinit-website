@@ -9,12 +9,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Save, Upload } from "lucide-react"
 import { DatabaseBackupPanel } from "@/components/admin/database-backup-panel"
+import { TurnstileSettingsPanel } from "@/components/admin/turnstile-settings-panel"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 
 import type { GstParty } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
 import { changeAdminEmail, changeAdminPassword, getAdminAccountInfo } from "@/app/actions/admin-actions"
 import { loadSupplierProfileFromDb, saveSupplierProfileToDb } from "@/app/actions/gst-actions"
+import { getPublicContactSettings, savePublicContactSettings } from "@/app/actions/site-content-actions"
+import Link from "next/link"
 
 export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
@@ -24,11 +27,13 @@ export default function SettingsPage() {
   const [generalSettings, setGeneralSettings] = useState({
     siteName: "OfinIT Solutions Pvt. Ltd.",
     siteTagline: "Transforming Ideas into Digital Reality",
-    contactEmail: "contact@ofinit.com",
+    contactEmail: "",
     supportEmail: "support@ofinit.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Tech Street, Silicon Valley, CA 94025",
+    phone: "",
+    address: "",
   })
+  const [generalMessage, setGeneralMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null)
+  const [loadingGeneral, setLoadingGeneral] = useState(true)
 
   const [seoSettings, setSeoSettings] = useState({
     metaTitle: "OfinIT Solutions - Web, Software & Mobile App Development",
@@ -97,6 +102,18 @@ export default function SettingsPage() {
         if (info) setAdminEmail(info.email)
       })
       .catch(() => {})
+
+    getPublicContactSettings()
+      .then((contact) => {
+        setGeneralSettings((g) => ({
+          ...g,
+          contactEmail: contact.contactEmail,
+          phone: contact.contactPhone,
+          address: contact.contactAddress,
+        }))
+      })
+      .catch(() => {})
+      .finally(() => setLoadingGeneral(false))
   }, [])
 
   const supplierStateLabel = useMemo(() => {
@@ -137,10 +154,26 @@ export default function SettingsPage() {
   }
 
   const handleSaveGeneral = async () => {
+    setGeneralMessage(null)
+    if (!generalSettings.contactEmail.trim()) {
+      setGeneralMessage({ type: "error", text: "Contact email is required." })
+      return
+    }
     setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const result = await savePublicContactSettings({
+      contactEmail: generalSettings.contactEmail,
+      contactPhone: generalSettings.phone,
+      contactAddress: generalSettings.address,
+    })
     setSaving(false)
-    alert("General settings saved successfully!")
+    if (!result.ok) {
+      setGeneralMessage({ type: "error", text: result.error })
+      return
+    }
+    setGeneralMessage({
+      type: "ok",
+      text: "Contact details saved. Refresh the public site to see the footer update.",
+    })
   }
 
   const handleSaveSEO = async () => {
@@ -222,11 +255,33 @@ export default function SettingsPage() {
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="smtp">SMTP</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
+          <TabsTrigger value="turnstile">Turnstile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-6">General Settings</h2>
+            <h2 className="text-xl font-semibold mb-2">General Settings</h2>
+            <p className="text-sm text-gray-600 mb-2">
+              Contact email, phone, and address below update the <strong>Contact</strong> block in the site footer on
+              every public page.
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              You can also edit them under{" "}
+              <Link href="/admin/site" className="text-primary hover:underline">
+                Website → Footer
+              </Link>
+              .
+            </p>
+            {generalMessage ? (
+              <p
+                className={`text-sm mb-4 rounded-lg px-3 py-2 ${
+                  generalMessage.type === "ok" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                }`}
+              >
+                {generalMessage.text}
+              </p>
+            ) : null}
+            {loadingGeneral ? <p className="text-sm text-gray-500 mb-4">Loading contact details…</p> : null}
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -282,21 +337,26 @@ export default function SettingsPage() {
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input
+                  <Textarea
                     id="address"
+                    rows={3}
                     value={generalSettings.address}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, address: e.target.value })}
-                    placeholder="123 Tech Street, Silicon Valley"
+                    placeholder={"498-2, Gudem, Siolim\nBardez, North Goa, Goa - 403517"}
+                    disabled={loadingGeneral}
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Use one line, or two lines (street on first line, city/state on second).
+                  </p>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleSaveGeneral} disabled={saving}>
+                <Button onClick={handleSaveGeneral} disabled={saving || loadingGeneral}>
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? "Saving..." : "Save contact details"}
                 </Button>
               </div>
             </div>
@@ -455,8 +515,9 @@ export default function SettingsPage() {
               <div>
                 <Label>Company logo</Label>
                 <p className="text-sm text-gray-500 mt-1 mb-2">
-                  Shown on the invoice header. Enter an image URL or upload a file (stored under{" "}
-                  <span className="font-mono text-xs">/uploads</span>).
+                  Shown on every invoice header. Default:{" "}
+                  <span className="font-mono text-xs">/ofinit-invoice-logo.svg</span> (site branding). Upload a
+                  custom image or URL to replace it.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Input
@@ -791,6 +852,10 @@ export default function SettingsPage() {
 
         <TabsContent value="database">
           <DatabaseBackupPanel />
+        </TabsContent>
+
+        <TabsContent value="turnstile">
+          <TurnstileSettingsPanel />
         </TabsContent>
       </Tabs>
     </div>

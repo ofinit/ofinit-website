@@ -3,8 +3,10 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
 import type { GstInvoice } from "@/lib/gst/invoice"
 import { computeInvoice } from "@/lib/gst/invoice"
+import { DEFAULT_SUPPLIER_LOGO_URL } from "@/lib/gst/supplier-defaults"
+
 function resolvePdfLogoSrc(url: string | undefined): string | undefined {
-  const u = url?.trim()
+  const u = url?.trim() || DEFAULT_SUPPLIER_LOGO_URL
   if (!u) return undefined
   if (u.startsWith("http") || u.startsWith("data:")) return u
   if (typeof window !== "undefined") {

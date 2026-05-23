@@ -4,10 +4,13 @@ import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { loadPublicSiteContent } from "@/lib/site-content/load"
-import { loadServiceBySlug } from "@/lib/services/load"
+import { loadPublishedServices, loadServiceBySlug } from "@/lib/services/load"
 import { PublicMarkdown } from "@/components/public/public-markdown"
+import { ServiceLeadSection } from "@/components/service-lead-section"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowRight } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
@@ -25,8 +28,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ServiceDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const [site, svc] = await Promise.all([loadPublicSiteContent(), loadServiceBySlug(slug)])
+  const [site, svc, allServices] = await Promise.all([
+    loadPublicSiteContent(),
+    loadServiceBySlug(slug),
+    loadPublishedServices(),
+  ])
   if (!svc) notFound()
+
+  const otherServices = allServices.filter((s) => s.slug !== slug).slice(0, 3)
 
   return (
     <>
@@ -46,24 +55,50 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 <span className="mx-2">/</span>
                 <span className="text-foreground">{svc.name}</span>
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{svc.name}</h1>
                 <Badge variant="secondary">Service</Badge>
               </div>
-              <p className="text-muted-foreground mt-3">{svc.shortDescription}</p>
+              <p className="text-lg text-muted-foreground mt-3 max-w-2xl leading-relaxed">{svc.shortDescription}</p>
             </div>
-            <Button asChild>
-              <Link href="/#contact">Talk to us</Link>
+            <Button asChild size="lg" className="shrink-0">
+              <Link href="#inquiry">Get a quote</Link>
             </Button>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-10 prose-headings:scroll-mt-24">
             <PublicMarkdown markdown={svc.bodyMd} />
           </div>
+
+          <ServiceLeadSection serviceName={svc.name} />
+
+          {otherServices.length > 0 ? (
+            <section className="mt-16 pt-12 border-t border-border">
+              <h2 className="text-xl font-semibold mb-2">Explore other services</h2>
+              <p className="text-sm text-muted-foreground mb-6">Related capabilities from OfinIT</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {otherServices.map((s) => (
+                  <Link key={s.slug} href={`/services/${s.slug}`} className="group block">
+                    <Card className="h-full transition-colors hover:border-primary/40">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base group-hover:text-primary transition-colors">{s.name}</CardTitle>
+                        <CardDescription className="line-clamp-3 text-sm">{s.shortDescription}</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+              <Button asChild variant="link" className="mt-4 px-0">
+                <Link href="/services">
+                  View all services
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </section>
+          ) : null}
         </div>
       </main>
       <Footer content={site.footer} />
     </>
   )
 }
-

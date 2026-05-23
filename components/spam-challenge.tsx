@@ -2,14 +2,13 @@
 
 import { Turnstile } from "@marsidev/react-turnstile"
 
-const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-
 type Props = {
+  siteKey: string | null
   onToken: (token: string | null) => void
 }
 
-/** Cloudflare Turnstile (optional). Set NEXT_PUBLIC_TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY in production. */
-export function SpamChallenge({ onToken }: Props) {
+/** Cloudflare Turnstile widget; siteKey from /api/public/turnstile-site-key or admin settings. */
+export function SpamChallenge({ siteKey, onToken }: Props) {
   if (!siteKey) return null
 
   return (
@@ -22,8 +21,4 @@ export function SpamChallenge({ onToken }: Props) {
       />
     </div>
   )
-}
-
-export function isTurnstileConfigured(): boolean {
-  return Boolean(siteKey)
 }

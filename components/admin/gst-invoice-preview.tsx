@@ -2,6 +2,7 @@
 
 import type { GstInvoice, GstInvoiceComputed, GstParty } from "@/lib/gst/invoice"
 import { computeInvoice } from "@/lib/gst/invoice"
+import { resolveSupplierLogoUrl } from "@/lib/gst/supplier-defaults"
 import { cn } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -33,8 +34,7 @@ export function GstInvoicePreview({
 }) {
   const computed: GstInvoiceComputed = computeInvoice(invoice)
   const isInternational = (invoice.buyer.country || "India") !== "India" || invoice.pricingCurrency === "USD"
-  const supplierLogoUrl =
-    invoice.supplier.logoUrl?.trim() || supplierProfile?.logoUrl?.trim() || ""
+  const supplierLogoUrl = resolveSupplierLogoUrl(invoice.supplier, supplierProfile)
 
   return (
     <div

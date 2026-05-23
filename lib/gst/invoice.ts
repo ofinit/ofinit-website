@@ -3,6 +3,8 @@ export type GstInvoiceType = "B2B" | "B2C"
 export type GstParty = {
   legalName: string
   tradeName?: string
+  /** Client email — used when sending invoice PDF */
+  email?: string
   /** Public or data URL; shown on invoice header for supplier */
   logoUrl?: string
   addressLine1: string

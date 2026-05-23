@@ -8,21 +8,31 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { isTurnstileConfigured, SpamChallenge } from "@/components/spam-challenge"
+import { SpamChallenge } from "@/components/spam-challenge"
 import { usePublicCsrf } from "@/hooks/use-public-csrf"
+import { useTurnstileSiteKey } from "@/hooks/use-turnstile-site-key"
 
 type FieldErrors = Partial<Record<"name" | "email" | "company" | "phone" | "message" | "consent", string[]>>
 
-export function ContactLeadForm() {
+type ContactLeadFormProps = {
+  serviceName?: string
+  messagePlaceholder?: string
+}
+
+export function ContactLeadForm({ serviceName, messagePlaceholder }: ContactLeadFormProps = {}) {
+  const defaultMessage = serviceName
+    ? `I'm interested in ${serviceName}.\n\n`
+    : ""
   const { token: csrfToken, ready: csrfReady, getFetchInit } = usePublicCsrf()
+  const { siteKey: turnstileSiteKey, configured: turnstileConfigured, loading: turnstileLoading } =
+    useTurnstileSiteKey()
   const [pending, setPending] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [consent, setConsent] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileKey, setTurnstileKey] = useState(0)
 
-  const needChallenge = isTurnstileConfigured()
-  const challengeReady = !needChallenge || Boolean(turnstileToken?.trim())
+  const challengeReady = !turnstileConfigured || Boolean(turnstileToken?.trim())
   const csrfOk = Boolean(csrfToken?.trim())
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -117,7 +127,11 @@ export function ContactLeadForm() {
           name="message"
           required
           rows={5}
-          placeholder="Briefly describe what you need — timeline and budget help us respond faster."
+          defaultValue={defaultMessage}
+          placeholder={
+            messagePlaceholder ??
+            "Briefly describe what you need — timeline and budget help us respond faster."
+          }
           disabled={pending}
           aria-invalid={!!errors.message?.length}
         />
@@ -139,19 +153,22 @@ export function ContactLeadForm() {
       {errors.consent?.[0] ? <p className="text-sm text-destructive -mt-2">{errors.consent[0]}</p> : null}
 
       <div key={turnstileKey}>
-        <SpamChallenge onToken={setTurnstileToken} />
+        <SpamChallenge siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
       </div>
-      {needChallenge ? (
+      {turnstileConfigured ? (
         <p className="text-xs text-muted-foreground">
           Complete the verification above to enable submit (spam protection).
         </p>
+      ) : null}
+      {turnstileLoading ? (
+        <p className="text-xs text-muted-foreground">Loading security check…</p>
       ) : null}
 
       <Button
         type="submit"
         size="lg"
         className="min-w-[160px]"
-        disabled={pending || !challengeReady || !csrfReady || !csrfOk}
+        disabled={pending || turnstileLoading || !challengeReady || !csrfReady || !csrfOk}
       >
         {pending ? (
           <>

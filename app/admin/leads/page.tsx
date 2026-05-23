@@ -1,88 +1,31 @@
-import { prisma } from "@/lib/db/prisma"
+import { loadAdminLeadsData, formatLeadDate } from "@/lib/leads/admin-leads"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
-type LeadRow = {
-  id: string
-  at: Date
-  source: string
-  name: string | null
-  email: string
-  company: string | null
-  phone: string | null
-  message: string | null
-}
-
 export default async function AdminLeadsPage() {
-  const [contacts, legacyNewsletter, confirmedSubs, pendingSubs] = await Promise.all([
-    prisma.leadSubmission.findMany({
-      where: { source: "contact" },
-      orderBy: { createdAt: "desc" },
-      take: 400,
-    }),
-    prisma.leadSubmission.findMany({
-      where: { source: "newsletter" },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
-    prisma.newsletterSubscription.findMany({
-      where: { confirmedAt: { not: null } },
-      orderBy: { confirmedAt: "desc" },
-      take: 400,
-    }),
-    prisma.newsletterSubscription.findMany({
-      where: { confirmedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: 80,
-    }),
-  ])
-
-  const rows: LeadRow[] = [
-    ...contacts.map((c) => ({
-      id: c.id,
-      at: c.createdAt,
-      source: "contact",
-      name: c.name,
-      email: c.email,
-      company: c.company,
-      phone: c.phone,
-      message: c.message,
-    })),
-    ...legacyNewsletter.map((c) => ({
-      id: c.id,
-      at: c.createdAt,
-      source: "newsletter (legacy)",
-      name: c.name,
-      email: c.email,
-      company: c.company,
-      phone: c.phone,
-      message: c.message ?? "—",
-    })),
-    ...confirmedSubs.map((s) => ({
-      id: `nl-${s.id}`,
-      at: s.confirmedAt!,
-      source: "newsletter",
-      name: null,
-      email: s.email,
-      company: null,
-      phone: null,
-      message: "Confirmed (double opt-in)",
-    })),
-  ]
-    .sort((a, b) => b.at.getTime() - a.at.getTime())
-    .slice(0, 500)
+  const { rows, pending } = await loadAdminLeadsData()
 
   return (
     <div className="space-y-10">
       <div>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Leads & subscribers</h1>
-          <p className="text-gray-600 mt-2">
-            Contact inquiries, legacy newsletter rows, and confirmed blog subscribers (double opt-in).
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Leads & subscribers</h1>
+            <p className="text-gray-600 mt-2">
+              Contact inquiries, legacy newsletter rows, and confirmed blog subscribers (double opt-in).
+            </p>
+          </div>
+          <Button asChild variant="outline" className="shrink-0">
+            <a href="/api/admin/leads/export">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </a>
+          </Button>
         </div>
 
         <Card className="overflow-hidden">
@@ -110,7 +53,7 @@ export default async function AdminLeadsPage() {
                   rows.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                        {lead.at.toISOString().slice(0, 16).replace("T", " ")}
+                        {formatLeadDate(lead.at)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={lead.source.includes("newsletter") ? "secondary" : "default"}>{lead.source}</Badge>
@@ -135,10 +78,14 @@ export default async function AdminLeadsPage() {
         </Card>
       </div>
 
-      {pendingSubs.length > 0 ? (
+      {pending.length > 0 ? (
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Newsletter — awaiting email confirmation</h2>
-          <p className="text-sm text-gray-600 mb-4">These addresses have not clicked the confirmation link yet.</p>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Newsletter — awaiting email confirmation</h2>
+            <p className="text-sm text-gray-600">
+              These addresses have not clicked the confirmation link yet. They are included in the CSV export.
+            </p>
+          </div>
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
@@ -150,14 +97,14 @@ export default async function AdminLeadsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pendingSubs.map((p) => (
+                  {pending.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {p.createdAt.toISOString().slice(0, 16).replace("T", " ")}
+                        {formatLeadDate(p.requestedAt)}
                       </TableCell>
                       <TableCell>{p.email}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {p.tokenExpires.toISOString().slice(0, 16).replace("T", " ")}
+                        {formatLeadDate(p.tokenExpires)}
                       </TableCell>
                     </TableRow>
                   ))}

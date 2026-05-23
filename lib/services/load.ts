@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma"
 import { getDefaultServices } from "./defaults"
+import { resolveServiceBodyMd } from "./default-bodies"
 
 export type ServicePublic = {
   slug: string
@@ -20,7 +21,7 @@ export async function loadPublishedServices(): Promise<ServicePublic[]> {
         slug: r.slug,
         name: r.name,
         shortDescription: r.shortDescription,
-        bodyMd: r.bodyMd,
+        bodyMd: resolveServiceBodyMd(r.bodyMd, r.slug, r.shortDescription),
         logoUrl: r.logoUrl ?? null,
       }))
     }
@@ -45,7 +46,7 @@ export async function loadServiceBySlug(slug: string): Promise<ServicePublic | n
         slug: row.slug,
         name: row.name,
         shortDescription: row.shortDescription,
-        bodyMd: row.bodyMd,
+        bodyMd: resolveServiceBodyMd(row.bodyMd, row.slug, row.shortDescription),
         logoUrl: row.logoUrl ?? null,
       }
     }

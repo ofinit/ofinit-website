@@ -19,16 +19,18 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Trash2, Plus, Printer, Save, Users, Download, X } from "lucide-react"
+import { Trash2, Plus, Printer, Save, Mail, Users, Download, X } from "lucide-react"
 
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
 import { computeInvoice, normalizeStateCode } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
 import { createBlankInvoice } from "@/lib/gst/invoice-store"
+import { withDefaultSupplierLogo } from "@/lib/gst/supplier-defaults"
 import {
   addGstHsn,
   deleteGstInvoice,
   loadGstWorkspace,
+  saveAndSendGstInvoice,
   saveGstInvoice,
   upsertGstBuyer,
 } from "@/app/actions/gst-actions"
@@ -72,6 +74,8 @@ export default function AdminInvoicesPage() {
   const [supplierProfile, setSupplierProfile] = useState<GstParty | null>(null)
   const [gstReady, setGstReady] = useState(false)
   const [gstError, setGstError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState(false)
 
   const filteredHistory = useMemo(() => {
     const q = historyQuery.trim().toLowerCase()
@@ -363,20 +367,28 @@ export default function AdminInvoicesPage() {
     w.document.close()
   }
 
-  async function onSave() {
-    if (!invoice) return
-    const normalized: GstInvoice = {
-      ...invoice,
-      supplier: { ...invoice.supplier, stateCode: normalizeStateCode(invoice.supplier.stateCode) },
-      buyer: { ...invoice.buyer, stateCode: normalizeStateCode(invoice.buyer.stateCode) },
-      placeOfSupplyStateCode: normalizeStateCode(invoice.placeOfSupplyStateCode),
-      invoiceType: (invoice.buyer.gstin || "").trim() ? "B2B" : "B2C",
+  function normalizeInvoice(current: GstInvoice): GstInvoice {
+    return {
+      ...current,
+      supplier: withDefaultSupplierLogo({
+        ...current.supplier,
+        stateCode: normalizeStateCode(current.supplier.stateCode),
+      }),
+      buyer: { ...current.buyer, stateCode: normalizeStateCode(current.buyer.stateCode) },
+      placeOfSupplyStateCode: normalizeStateCode(current.placeOfSupplyStateCode),
+      invoiceType: (current.buyer.gstin || "").trim() ? "B2B" : "B2C",
       updatedAt: new Date().toISOString(),
     }
+  }
+
+  async function onSave() {
+    if (!invoice) return
+    const normalized = normalizeInvoice(invoice)
     const nextErrors = validate(normalized)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
 
+    setSaving(true)
     try {
       await upsertGstBuyer(normalized.buyer)
       await saveGstInvoice(normalized)
@@ -385,6 +397,36 @@ export default function AdminInvoicesPage() {
       setActiveTab("history")
     } catch {
       alert("Could not save invoice. Check that you are logged in and the database is configured.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function onSaveAndSend() {
+    if (!invoice) return
+    const normalized = normalizeInvoice(invoice)
+    const nextErrors = validate(normalized)
+    if (!normalized.buyer.email?.trim()) {
+      nextErrors.buyerEmail = "Buyer email is required to send the invoice."
+    }
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+
+    setSending(true)
+    try {
+      const result = await saveAndSendGstInvoice(normalized)
+      if (!result.ok) {
+        alert(result.error)
+        return
+      }
+      setInvoice(normalized)
+      await refreshWorkspace()
+      alert(`Invoice saved and emailed to ${normalized.buyer.email}.`)
+      setActiveTab("history")
+    } catch {
+      alert("Could not save or send invoice.")
+    } finally {
+      setSending(false)
     }
   }
 
@@ -505,12 +547,24 @@ export default function AdminInvoicesPage() {
                     <Printer className="w-4 h-4" />
                     Print / PDF
                   </Button>
-                  <Button className="gap-2" onClick={onSave}>
+                  <Button className="gap-2" onClick={onSave} disabled={saving || sending}>
                     <Save className="w-4 h-4" />
-                    Save
+                    {saving ? "Saving…" : "Save"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="gap-2"
+                    onClick={onSaveAndSend}
+                    disabled={saving || sending}
+                  >
+                    <Mail className="w-4 h-4" />
+                    {sending ? "Sending…" : "Save & send email"}
                   </Button>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Save & send attaches a PDF to the buyer email (configure SMTP in Settings → SMTP or server env).
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
@@ -601,6 +655,22 @@ export default function AdminInvoicesPage() {
                         })
                       }
                     />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Email (for sending invoice)</Label>
+                    <Input
+                      type="email"
+                      value={invoice.buyer.email || ""}
+                      onChange={(e) =>
+                        setInvoice({
+                          ...invoice,
+                          buyer: updateParty(invoice.buyer, { email: e.target.value }),
+                        })
+                      }
+                      placeholder="client@company.com"
+                      autoComplete="email"
+                    />
+                    {errors.buyerEmail ? <p className="text-sm text-red-600 mt-1">{errors.buyerEmail}</p> : null}
                   </div>
                   <div className="md:col-span-2">
                     <Label>GSTIN (optional)</Label>

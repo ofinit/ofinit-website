@@ -78,6 +78,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modu
 # Schema + global Prisma CLI (`npx prisma db push`). Local npm install hits peer-deps on standalone package.json — use -g.
 COPY --from=builder /app/prisma ./prisma
 COPY --chown=nextjs:nodejs scripts/docker-seed-admin.mjs ./scripts/docker-seed-admin.mjs
+COPY --chown=nextjs:nodejs scripts/docker-seed-blogs.mjs ./scripts/docker-seed-blogs.mjs
 USER root
 RUN npm install -g prisma@6.19.3 \
   && npm cache clean --force
