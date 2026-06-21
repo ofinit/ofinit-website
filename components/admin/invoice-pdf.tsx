@@ -37,7 +37,10 @@ function inr(value: number) {
 
 export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
   const computed = computeInvoice(invoice)
-  const logoSrc = resolvePdfLogoSrc(invoice.supplier.logoUrl)
+  const rawLogo = invoice.supplier.logoUrl?.trim()
+  const isDefaultLogo = !rawLogo || rawLogo.includes("ofinit-invoice-logo.svg")
+  const isSvg = rawLogo?.toLowerCase().endsWith(".svg")
+  const logoSrc = isDefaultLogo || isSvg ? undefined : resolvePdfLogoSrc(rawLogo)
 
   return (
     <Document>
@@ -46,6 +49,12 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, flex: 1 }}>
             {logoSrc ? (
               <Image src={logoSrc} style={{ width: 72, height: 40, objectFit: "contain" }} />
+            ) : isDefaultLogo ? (
+              <View style={{ width: 72, height: 40, justifyContent: "center" }}>
+                <Text style={{ fontSize: 16, fontWeight: "bold", fontFamily: "Courier", color: "#0f172a" }}>
+                  <Text style={{ color: "#2563eb" }}>&lt;</Text>OfinIT<Text style={{ color: "#2563eb" }}>/&gt;</Text>
+                </Text>
+              </View>
             ) : null}
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Tax Invoice</Text>
