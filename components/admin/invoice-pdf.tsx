@@ -50,10 +50,10 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
             {logoSrc ? (
               <Image src={logoSrc} style={{ width: 72, height: 40, objectFit: "contain" }} />
             ) : isDefaultLogo ? (
-              <View style={{ width: 72, height: 40, justifyContent: "center" }}>
-                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#0f172a" }}>
-                  <Text style={{ color: "#2563eb" }}>&lt;</Text>OfinIT<Text style={{ color: "#2563eb" }}>/&gt;</Text>
-                </Text>
+              <View style={{ width: 72, height: 40, flexDirection: "row", alignItems: "center" }}>
+                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#2563eb" }}>&lt;</Text>
+                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#0f172a" }}>OfinIT</Text>
+                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#2563eb" }}>/&gt;</Text>
               </View>
             ) : null}
             <View style={{ flex: 1 }}>
