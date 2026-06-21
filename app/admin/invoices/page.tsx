@@ -230,44 +230,16 @@ export default function AdminInvoicesPage() {
     }
   }, [invoice?.buyer.gstin])
 
-  // Auto-fill place of supply state name from code
-  useEffect(() => {
-    if (!invoice) return
-    const code = normalizeStateCode(invoice.placeOfSupplyStateCode)
-    const name = getIndiaStateNameByCode(code)
-    if (!name) return
-    if (invoice.placeOfSupplyState !== name || invoice.placeOfSupplyStateCode !== code) {
-      setInvoice({ ...invoice, placeOfSupplyStateCode: code, placeOfSupplyState: name })
-    }
-  }, [invoice?.placeOfSupplyStateCode])
-
-  // Auto derive buyer stateCode from buyer state selection (no place-of-supply coupling)
-  useEffect(() => {
-    if (!invoice) return
-    const buyerCode = normalizeStateCode(invoice.buyer.stateCode || "")
-    const buyerStateName = buyerCode ? getIndiaStateNameByCode(buyerCode) : ""
-
-    if (
-      (buyerCode && invoice.buyer.stateCode !== buyerCode) ||
-      (buyerStateName && invoice.buyer.state !== buyerStateName)
-    ) {
-      setInvoice({
-        ...invoice,
-        buyer: { ...invoice.buyer, stateCode: buyerCode, state: buyerStateName || invoice.buyer.state },
-      })
-    }
-  }, [invoice?.buyer.stateCode])
-
-  // Place of supply should follow buyer state
+  // Place of supply always follows buyer state (both on buyer state change and when a new invoice loads)
   useEffect(() => {
     if (!invoice) return
     const code = normalizeStateCode(invoice.buyer.stateCode || "")
     const name = getIndiaStateNameByCode(code)
     if (!code || !name) return
     if (normalizeStateCode(invoice.placeOfSupplyStateCode || "") !== code || invoice.placeOfSupplyState !== name) {
-      setInvoice({ ...invoice, placeOfSupplyStateCode: code, placeOfSupplyState: name })
+      setInvoice((prev) => prev ? { ...prev, placeOfSupplyStateCode: code, placeOfSupplyState: name } : prev)
     }
-  }, [invoice?.buyer.stateCode])
+  }, [invoice?.buyer.stateCode, invoice?.id])
 
   // Auto pricing currency from buyer country
   useEffect(() => {
