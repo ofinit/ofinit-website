@@ -7,6 +7,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: [
+    "@react-pdf/renderer",
+    "@react-pdf/font",
+    "@react-pdf/layout",
+    "@react-pdf/image",
+    "fontkit",
+    "png-js",
+  ],
 }
 
-export default nextConfig
+export default nextConfig
