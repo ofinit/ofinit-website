@@ -51,7 +51,7 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
               <Image src={logoSrc} style={{ width: 72, height: 40, objectFit: "contain" }} />
             ) : isDefaultLogo ? (
               <View style={{ width: 72, height: 40, justifyContent: "center" }}>
-                <Text style={{ fontSize: 16, fontWeight: "bold", fontFamily: "Courier", color: "#0f172a" }}>
+                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#0f172a" }}>
                   <Text style={{ color: "#2563eb" }}>&lt;</Text>OfinIT<Text style={{ color: "#2563eb" }}>/&gt;</Text>
                 </Text>
               </View>

@@ -373,10 +373,11 @@ export default function AdminInvoicesPage() {
   async function onDownloadInvoicePdf(inv: GstInvoice) {
     setDownloading(true)
     try {
+      const normalized = normalizeInvoice(inv)
       const res = await fetch("/api/admin/invoices/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inv),
+        body: JSON.stringify(normalized),
       })
       if (!res.ok) throw new Error("PDF generation failed")
 
