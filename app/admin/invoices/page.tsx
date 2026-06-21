@@ -370,19 +370,13 @@ export default function AdminInvoicesPage() {
     w.document.close()
   }
 
-  async function onDownloadPdf() {
-    if (!invoice) return
-    const normalized = normalizeInvoice(invoice)
-    const nextErrors = validate(normalized)
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length) return
-
+  async function onDownloadInvoicePdf(inv: GstInvoice) {
     setDownloading(true)
     try {
       const res = await fetch("/api/admin/invoices/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(normalized),
+        body: JSON.stringify(inv),
       })
       if (!res.ok) throw new Error("PDF generation failed")
 
@@ -390,7 +384,7 @@ export default function AdminInvoicesPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `Invoice-${normalized.invoiceNo}.pdf`
+      a.download = `Invoice-${inv.invoiceNo}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -401,6 +395,16 @@ export default function AdminInvoicesPage() {
     } finally {
       setDownloading(false)
     }
+  }
+
+  async function onDownloadPdf() {
+    if (!invoice) return
+    const normalized = normalizeInvoice(invoice)
+    const nextErrors = validate(normalized)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+
+    await onDownloadInvoicePdf(normalized)
   }
 
   function normalizeInvoice(current: GstInvoice): GstInvoice {
@@ -990,7 +994,12 @@ export default function AdminInvoicesPage() {
                     </TableHead>
                     <TableHead>Invoice No</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead>Bill to name</TableHead>
+                    <TableHead>State</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Discount</TableHead>
                     <TableHead className="text-right">Grand total</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -999,6 +1008,15 @@ export default function AdminInvoicesPage() {
                   {filteredHistory.length ? (
                     filteredHistory.map((inv) => {
                       const totals = computeInvoice(inv).totals
+                      const totalQty = inv.items.reduce((sum, it) => sum + (it.qty || 0), 0)
+                      const totalDiscount = inv.items.reduce((sum, it) => sum + (it.discount || 0), 0)
+                      const discountStr = totalDiscount > 0
+                        ? inv.pricingCurrency === "USD"
+                          ? `$${totalDiscount.toFixed(2)}`
+                          : `₹${totalDiscount.toFixed(2)}`
+                        : "—"
+                      const descriptions = inv.items.map((it) => it.description || "—").join(", ")
+
                       return (
                         <TableRow key={inv.id}>
                           <TableCell>
@@ -1010,10 +1028,27 @@ export default function AdminInvoicesPage() {
                           </TableCell>
                           <TableCell className="font-medium">{inv.invoiceNo}</TableCell>
                           <TableCell>{inv.invoiceDate}</TableCell>
+                          <TableCell>{inv.buyer.legalName || "—"}</TableCell>
+                          <TableCell>{inv.buyer.state || inv.buyer.stateCode || "—"}</TableCell>
                           <TableCell>{inv.invoiceType}</TableCell>
+                          <TableCell className="max-w-[150px] truncate" title={descriptions}>
+                            {descriptions}
+                          </TableCell>
+                          <TableCell className="text-right">{totalQty}</TableCell>
+                          <TableCell className="text-right">{discountStr}</TableCell>
                           <TableCell className="text-right">{fmtINR(totals.grandTotal)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                className="bg-transparent"
+                                size="sm"
+                                onClick={() => onDownloadInvoicePdf(inv)}
+                                disabled={downloading}
+                                title="Download PDF"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
                               <Button variant="outline" className="bg-transparent" size="sm" onClick={() => openFromHistory(inv)}>
                                 Open
                               </Button>
@@ -1032,7 +1067,7 @@ export default function AdminInvoicesPage() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
+                      <TableCell colSpan={11} className="text-center text-gray-500 py-10">
                         No invoices found.
                       </TableCell>
                     </TableRow>
