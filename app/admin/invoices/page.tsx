@@ -76,6 +76,7 @@ export default function AdminInvoicesPage() {
   const [gstError, setGstError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const filteredHistory = useMemo(() => {
     const q = historyQuery.trim().toLowerCase()
@@ -257,16 +258,16 @@ export default function AdminInvoicesPage() {
     }
   }, [invoice?.buyer.stateCode])
 
-  // Place of supply should follow supplier state (as per your workflow)
+  // Place of supply should follow buyer state
   useEffect(() => {
     if (!invoice) return
-    const code = normalizeStateCode(invoice.supplier.stateCode || "")
+    const code = normalizeStateCode(invoice.buyer.stateCode || "")
     const name = getIndiaStateNameByCode(code)
     if (!code || !name) return
     if (normalizeStateCode(invoice.placeOfSupplyStateCode || "") !== code || invoice.placeOfSupplyState !== name) {
       setInvoice({ ...invoice, placeOfSupplyStateCode: code, placeOfSupplyState: name })
     }
-  }, [invoice?.supplier.stateCode])
+  }, [invoice?.buyer.stateCode])
 
   // Auto pricing currency from buyer country
   useEffect(() => {
@@ -332,7 +333,11 @@ export default function AdminInvoicesPage() {
     if (!printable) return
 
     const html = printable.outerHTML
-    const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=700")
+    const styles = Array.from(document.querySelectorAll("link[rel='stylesheet'], style"))
+      .map((x) => x.outerHTML)
+      .join("\n")
+
+    const w = window.open("", "_blank", "width=900,height=700")
     if (!w) return
     w.document.open()
     w.document.write(`<!doctype html>
@@ -341,30 +346,61 @@ export default function AdminInvoicesPage() {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${invoice.invoiceNo}</title>
+    ${styles}
     <style>
       @page { size: A4; margin: 12mm; }
-      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #fff; }
+      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #fff; padding: 20px; }
       * { box-sizing: border-box; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; font-size: 12px; vertical-align: top; }
-      th { text-align: left; color: #111827; }
-      .print\\:border-0 { border: 0 !important; }
-      .print\\:rounded-none { border-radius: 0 !important; }
-      .print\\:p-0 { padding: 0 !important; }
-      .whitespace-normal { white-space: normal; }
-      .text-right { text-align: right; }
-      .text-xs { font-size: 12px; }
     </style>
   </head>
   <body>
-    ${html}
+    <div class="print:p-0">
+      ${html}
+    </div>
     <script>
       window.focus();
-      window.print();
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          window.print();
+        }, 250);
+      });
     </script>
   </body>
 </html>`)
     w.document.close()
+  }
+
+  async function onDownloadPdf() {
+    if (!invoice) return
+    const normalized = normalizeInvoice(invoice)
+    const nextErrors = validate(normalized)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+
+    setDownloading(true)
+    try {
+      const res = await fetch("/api/admin/invoices/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalized),
+      })
+      if (!res.ok) throw new Error("PDF generation failed")
+
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `Invoice-${normalized.invoiceNo}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error(e)
+      alert("Could not download PDF. Please try again.")
+    } finally {
+      setDownloading(false)
+    }
   }
 
   function normalizeInvoice(current: GstInvoice): GstInvoice {
@@ -542,12 +578,16 @@ export default function AdminInvoicesPage() {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Invoice details</h2>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button variant="outline" className="bg-transparent gap-2" onClick={onPrint}>
                     <Printer className="w-4 h-4" />
-                    Print / PDF
+                    Print
                   </Button>
-                  <Button className="gap-2" onClick={onSave} disabled={saving || sending}>
+                  <Button variant="outline" className="bg-transparent gap-2" onClick={onDownloadPdf} disabled={downloading}>
+                    <Download className="w-4 h-4" />
+                    {downloading ? "Downloading…" : "Download PDF"}
+                  </Button>
+                  <Button className="gap-2" onClick={onSave} disabled={saving || sending || downloading}>
                     <Save className="w-4 h-4" />
                     {saving ? "Saving…" : "Save"}
                   </Button>
@@ -555,7 +595,7 @@ export default function AdminInvoicesPage() {
                     variant="secondary"
                     className="gap-2"
                     onClick={onSaveAndSend}
-                    disabled={saving || sending}
+                    disabled={saving || sending || downloading}
                   >
                     <Mail className="w-4 h-4" />
                     {sending ? "Sending…" : "Save & send email"}
@@ -846,10 +886,16 @@ export default function AdminInvoicesPage() {
                       <span className="font-semibold">{computed ? fmtINR(computed.totals.grandTotal) : "—"}</span>
                     </p>
                   </div>
-                  <Button variant="outline" className="bg-transparent gap-2" onClick={onPrint}>
-                    <Printer className="w-4 h-4" />
-                    Print
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="bg-transparent gap-2" onClick={onDownloadPdf} disabled={downloading}>
+                      <Download className="w-4 h-4" />
+                      {downloading ? "Downloading…" : "Download"}
+                    </Button>
+                    <Button variant="outline" className="bg-transparent gap-2" onClick={onPrint}>
+                      <Printer className="w-4 h-4" />
+                      Print
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
