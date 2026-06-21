@@ -1,7 +1,27 @@
-import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
+import { Document, Font, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
 import type { GstInvoice } from "@/lib/gst/invoice"
 import { computeInvoice } from "@/lib/gst/invoice"
 import { DEFAULT_SUPPLIER_LOGO_URL } from "@/lib/gst/supplier-defaults"
+
+// Register Roboto from Google Fonts — supports the ₹ (U+20B9) Rupee glyph
+Font.register({
+  family: "Roboto",
+  fonts: [
+    {
+      src: "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Mu4mxP.ttf",
+      fontWeight: 400,
+    },
+    {
+      src: "https://fonts.gstatic.com/s/roboto/v32/KFOlCnqEu92Fr1MmWUlfBBc9.ttf",
+      fontWeight: 700,
+    },
+    {
+      src: "https://fonts.gstatic.com/s/roboto/v32/KFOkCnqEu92Fr1Mu51xIIzc.ttf",
+      fontWeight: 400,
+      fontStyle: "italic",
+    },
+  ],
+})
 
 function resolvePdfLogoSrc(url: string | undefined): string | undefined {
   const u = url?.trim() || DEFAULT_SUPPLIER_LOGO_URL
@@ -17,20 +37,34 @@ function resolvePdfLogoSrc(url: string | undefined): string | undefined {
   return u
 }
 
+const FONT = "Roboto"
+
 const styles = StyleSheet.create({
-  page: { padding: 24, fontSize: 10, fontFamily: "Helvetica" },
+  page: { padding: 32, fontSize: 10, fontFamily: FONT },
   row: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  section: { marginTop: 12 },
+  section: { marginTop: 14 },
   h1: { fontSize: 14, fontWeight: 700 },
-  label: { fontSize: 9, color: "#555" },
-  tableHeader: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#ddd", paddingBottom: 6, marginTop: 8 },
-  tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#eee", paddingVertical: 6 },
+  label: { fontSize: 8.5, color: "#666", marginBottom: 2 },
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingBottom: 6,
+    marginTop: 10,
+    fontWeight: 700,
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingVertical: 6,
+  },
   cell: { paddingRight: 6 },
   right: { textAlign: "right" },
 })
 
 function inr(value: number) {
-  return `₹${value.toFixed(2)}`
+  return `\u20B9${value.toFixed(2)}`
 }
 
 export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
@@ -43,21 +77,39 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {/* ── Header Row ─────────────────────────────────────────── */}
         <View style={styles.row}>
+          {/* Supplier block */}
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, flex: 1 }}>
+            {/* Logo */}
             {logoSrc ? (
               <Image src={logoSrc} style={{ width: 72, height: 40, objectFit: "contain" }} />
             ) : isDefaultLogo ? (
-              <View style={{ width: 72, height: 40, flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#2563eb" }}>&lt;</Text>
-                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#0f172a" }}>OfinIT</Text>
-                <Text style={{ fontSize: 16, fontFamily: "Courier-Bold", color: "#2563eb" }}>/&gt;</Text>
+              <View
+                style={{
+                  height: 36,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginRight: 8,
+                }}
+              >
+                <Text style={{ fontSize: 18, fontWeight: 700, color: "#2563eb", fontFamily: FONT }}>
+                  {"<"}
+                </Text>
+                <Text style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", fontFamily: FONT }}>
+                  OfinIT
+                </Text>
+                <Text style={{ fontSize: 18, fontWeight: 700, color: "#2563eb", fontFamily: FONT }}>
+                  {"/>"}
+                </Text>
               </View>
             ) : null}
+
+            {/* Supplier details */}
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Tax Invoice</Text>
               <Text style={styles.h1}>{invoice.supplier.legalName}</Text>
-              <Text>{invoice.supplier.addressLine1}</Text>
+              <Text style={{ marginTop: 2 }}>{invoice.supplier.addressLine1}</Text>
               <Text>
                 {invoice.supplier.city ? `${invoice.supplier.city}, ` : ""}
                 {invoice.supplier.state} {invoice.supplier.pinCode}
@@ -65,8 +117,12 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
               {invoice.supplier.gstin ? <Text>GSTIN: {invoice.supplier.gstin}</Text> : null}
             </View>
           </View>
-          <View style={{ width: 220 }}>
-            <Text style={{ fontSize: 12, fontWeight: 700, textAlign: "right" }}>Invoice</Text>
+
+          {/* Invoice meta */}
+          <View style={{ width: 210 }}>
+            <Text style={{ fontSize: 13, fontWeight: 700, textAlign: "right", marginBottom: 4 }}>
+              Invoice
+            </Text>
             <Text style={{ textAlign: "right" }}>Invoice No: {invoice.invoiceNo}</Text>
             <Text style={{ textAlign: "right" }}>Date: {invoice.invoiceDate}</Text>
             <Text style={{ textAlign: "right", marginTop: 6 }}>
@@ -78,84 +134,131 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
           </View>
         </View>
 
+        {/* ── Bill To / Currency ────────────────────────────────── */}
         <View style={[styles.section, styles.row]}>
-          <View style={{ flex: 1, borderWidth: 1, borderColor: "#eee", padding: 10 }}>
+          <View style={{ flex: 1, borderWidth: 1, borderColor: "#e2e8f0", padding: 10, borderRadius: 2 }}>
             <Text style={styles.label}>Bill To</Text>
-            <Text style={{ fontSize: 11, fontWeight: 700 }}>{invoice.buyer.legalName}</Text>
+            <Text style={{ fontSize: 11, fontWeight: 700, marginBottom: 2 }}>
+              {invoice.buyer.legalName}
+            </Text>
             <Text>{invoice.buyer.addressLine1}</Text>
             <Text>
               {invoice.buyer.city ? `${invoice.buyer.city}, ` : ""}
               {invoice.buyer.state}
-              {(invoice.buyer.country || "India") === "India" && invoice.buyer.stateCode ? ` (${invoice.buyer.stateCode})` : ""}{" "}
+              {(invoice.buyer.country || "India") === "India" && invoice.buyer.stateCode
+                ? ` (${invoice.buyer.stateCode})`
+                : ""}{" "}
               {invoice.buyer.pinCode}
             </Text>
             <Text>Country: {invoice.buyer.country || "India"}</Text>
             {invoice.buyer.gstin ? <Text>GSTIN: {invoice.buyer.gstin}</Text> : null}
           </View>
-          <View style={{ width: 220, borderWidth: 1, borderColor: "#eee", padding: 10 }}>
+          <View
+            style={{
+              width: 210,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              padding: 10,
+              borderRadius: 2,
+            }}
+          >
             <Text style={styles.label}>Currency</Text>
-            <Text>{invoice.pricingCurrency === "USD" ? `USD (converted @ ${invoice.fxUsdInr})` : "INR"}</Text>
+            <Text>
+              {invoice.pricingCurrency === "USD"
+                ? `USD (converted @ ${invoice.fxUsdInr})`
+                : "INR"}
+            </Text>
           </View>
         </View>
 
+        {/* ── Line Items Table ─────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.tableHeader}>
             <Text style={[styles.cell, { width: 18 }]}>#</Text>
             <Text style={[styles.cell, { flex: 1 }]}>Description</Text>
-            <Text style={[styles.cell, { width: 60 }]}>HSN/SAC</Text>
-            <Text style={[styles.cell, styles.right, { width: 40 }]}>Qty</Text>
-            <Text style={[styles.cell, styles.right, { width: 70 }]}>Rate</Text>
-            <Text style={[styles.cell, styles.right, { width: 70 }]}>Taxable</Text>
-            <Text style={[styles.cell, styles.right, { width: 40 }]}>GST%</Text>
+            <Text style={[styles.cell, { width: 55 }]}>HSN/SAC</Text>
+            <Text style={[styles.cell, styles.right, { width: 36 }]}>Qty</Text>
+            <Text style={[styles.cell, styles.right, { width: 68 }]}>Rate</Text>
+            <Text style={[styles.cell, styles.right, { width: 68 }]}>Taxable</Text>
+            <Text style={[styles.cell, styles.right, { width: 38 }]}>GST%</Text>
             <Text style={[styles.cell, styles.right, { width: 70 }]}>Line total</Text>
           </View>
+
           {computed.items.map((it, idx) => (
             <View key={it.id} style={styles.tableRow}>
               <Text style={[styles.cell, { width: 18 }]}>{idx + 1}</Text>
               <Text style={[styles.cell, { flex: 1 }]}>{it.description || "—"}</Text>
-              <Text style={[styles.cell, { width: 60 }]}>{it.hsnSac || "—"}</Text>
-              <Text style={[styles.cell, styles.right, { width: 40 }]}>{String(it.qty)}</Text>
-              <Text style={[styles.cell, styles.right, { width: 70 }]}>{inr(it.unitPriceInr)}</Text>
-              <Text style={[styles.cell, styles.right, { width: 70 }]}>{inr(it.taxableValue)}</Text>
-              <Text style={[styles.cell, styles.right, { width: 40 }]}>{String(it.gstRate)}</Text>
+              <Text style={[styles.cell, { width: 55 }]}>{it.hsnSac || "—"}</Text>
+              <Text style={[styles.cell, styles.right, { width: 36 }]}>{String(it.qty)}</Text>
+              <Text style={[styles.cell, styles.right, { width: 68 }]}>{inr(it.unitPriceInr)}</Text>
+              <Text style={[styles.cell, styles.right, { width: 68 }]}>{inr(it.taxableValue)}</Text>
+              <Text style={[styles.cell, styles.right, { width: 38 }]}>{String(it.gstRate)}</Text>
               <Text style={[styles.cell, styles.right, { width: 70 }]}>{inr(it.tax.lineTotal)}</Text>
             </View>
           ))}
         </View>
 
-        <View style={[styles.section, { alignSelf: "flex-end", width: 240, borderWidth: 1, borderColor: "#eee", padding: 10 }]}>
+        {/* ── Totals ───────────────────────────────────────────── */}
+        <View
+          style={[
+            styles.section,
+            {
+              alignSelf: "flex-end",
+              width: 240,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              padding: 10,
+              borderRadius: 2,
+            },
+          ]}
+        >
           <View style={styles.row}>
             <Text>Taxable value</Text>
             <Text style={styles.right}>{inr(computed.totals.taxableValue)}</Text>
           </View>
+
           {computed.supplyType === "INTRA_STATE" ? (
             <>
-              <View style={[styles.row, { marginTop: 6 }]}>
+              <View style={[styles.row, { marginTop: 5 }]}>
                 <Text>CGST</Text>
                 <Text style={styles.right}>{inr(computed.totals.cgstAmount)}</Text>
               </View>
-              <View style={[styles.row, { marginTop: 6 }]}>
+              <View style={[styles.row, { marginTop: 5 }]}>
                 <Text>SGST</Text>
                 <Text style={styles.right}>{inr(computed.totals.sgstAmount)}</Text>
               </View>
             </>
           ) : (
-            <View style={[styles.row, { marginTop: 6 }]}>
+            <View style={[styles.row, { marginTop: 5 }]}>
               <Text>IGST</Text>
               <Text style={styles.right}>{inr(computed.totals.igstAmount)}</Text>
             </View>
           )}
-          <View style={[styles.row, { marginTop: 6 }]}>
-            <Text>Total</Text>
-            <Text style={[styles.right, { fontWeight: 700 }]}>{inr(computed.totals.grandTotal)}</Text>
+
+          <View
+            style={[
+              styles.row,
+              {
+                marginTop: 8,
+                paddingTop: 6,
+                borderTopWidth: 1,
+                borderTopColor: "#ddd",
+              },
+            ]}
+          >
+            <Text style={{ fontWeight: 700 }}>Total</Text>
+            <Text style={[styles.right, { fontWeight: 700 }]}>
+              {inr(computed.totals.grandTotal)}
+            </Text>
           </View>
         </View>
 
+        {/* ── Footer ───────────────────────────────────────────── */}
         <Text
           style={{
-            marginTop: 28,
+            marginTop: 32,
             fontSize: 8,
-            color: "#555",
+            color: "#888",
             textAlign: "center",
             fontStyle: "italic",
           }}
@@ -166,4 +269,3 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
     </Document>
   )
 }
-
