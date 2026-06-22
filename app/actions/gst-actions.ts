@@ -71,7 +71,32 @@ export async function loadGstWorkspace(): Promise<GstWorkspaceLoadResult> {
       getJsonSetting(GST_HSN_KEY),
       getJsonSetting(GST_SUPPLIER_KEY),
     ])
-    const invoices = invoiceRows.map((r) => r.payload as GstInvoice)
+    let invoices = invoiceRows.map((r) => r.payload as GstInvoice)
+
+    // Migration: Update existing invoice INV/2026-27/0001 supplier details if outdated
+    const targetInvIndex = invoices.findIndex((inv) => inv.invoiceNo === "INV/2026-27/0001")
+    if (targetInvIndex !== -1) {
+      const targetInv = invoices[targetInvIndex]
+      if (!targetInv.supplier.pan || targetInv.supplier.stateCode !== "30") {
+        const defaultSupplier = mergeGstSupplierWithDefaults(null)
+        const updatedInv: GstInvoice = {
+          ...targetInv,
+          supplier: {
+            ...targetInv.supplier,
+            ...defaultSupplier,
+          },
+          placeOfSupplyState: "Goa",
+          placeOfSupplyStateCode: "30",
+          updatedAt: new Date().toISOString(),
+        }
+        await prisma.gstInvoiceRecord.update({
+          where: { id: targetInv.id },
+          data: { payload: JSON.parse(JSON.stringify(updatedInv)) },
+        })
+        invoices = invoices.map((inv, idx) => idx === targetInvIndex ? updatedInv : inv)
+      }
+    }
+
     const buyers = Array.isArray(buyersRaw) ? (buyersRaw as GstParty[]) : []
     const hsnList = Array.isArray(hsnRaw) ? (hsnRaw as string[]) : []
     const supplier =
