@@ -63,7 +63,16 @@ export function GstInvoicePreview({
                 {invoice.supplier.city ? ", " : ""}
                 {invoice.supplier.state} {invoice.supplier.pinCode}
               </div>
-              {invoice.supplier.gstin ? <div className="mt-1">GSTIN: {invoice.supplier.gstin}</div> : null}
+              {invoice.supplier.tel ? <div className="mt-1">Tel.: {invoice.supplier.tel}</div> : null}
+              {invoice.supplier.email ? <div>Email: {invoice.supplier.email}</div> : null}
+              {invoice.supplier.gstin ? <div className="mt-1 font-medium">GSTIN: {invoice.supplier.gstin}</div> : null}
+              {invoice.supplier.website ? (
+                <div>
+                  <a href={invoice.supplier.website} className="text-blue-600 hover:underline">
+                    {invoice.supplier.website}
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -233,7 +242,46 @@ export function GstInvoicePreview({
         </div>
       </div>
 
-      <div className="mt-10 text-xs text-gray-600 text-center italic print:mt-6">
+      {/* Bank details + PAN */}
+      {invoice.supplier.bankDetails || invoice.supplier.pan ? (
+        <div className="mt-6 border border-gray-200 rounded-md p-4">
+          <div className="text-xs font-semibold text-gray-600 mb-3">Payment Details</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            {invoice.supplier.pan ? (
+              <div className="flex gap-2">
+                <span className="text-gray-500 shrink-0">Company PAN:</span>
+                <span className="font-semibold tracking-wide">{invoice.supplier.pan}</span>
+              </div>
+            ) : null}
+            {invoice.supplier.bankDetails ? (
+              <div className="space-y-1">
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-24 shrink-0">A/c Name:</span>
+                  <span className="font-medium">{invoice.supplier.bankDetails.accountName}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-24 shrink-0">Bank:</span>
+                  <span>{invoice.supplier.bankDetails.bankName}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-24 shrink-0">A/c No.:</span>
+                  <span className="font-mono font-medium tracking-wider">{invoice.supplier.bankDetails.accountNo}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-24 shrink-0">Branch:</span>
+                  <span>{invoice.supplier.bankDetails.branch}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-24 shrink-0">IFSC:</span>
+                  <span className="font-mono font-medium">{invoice.supplier.bankDetails.ifsc}</span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-6 text-xs text-gray-600 text-center italic print:mt-6">
         *This is a computer generated invoice and does not require signature*
       </div>
     </div>

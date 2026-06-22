@@ -7,13 +7,24 @@ export function getDefaultGstSupplier(): GstParty {
   return {
     legalName: "OfinIT Solutions Pvt. Ltd.",
     logoUrl: DEFAULT_SUPPLIER_LOGO_URL,
-    addressLine1: "",
-    city: "",
+    addressLine1: "498-2, Gudem, Siolim, Bardez",
+    city: "North Goa",
     country: "India",
-    state: "",
-    stateCode: "27",
-    pinCode: "",
-    gstin: "",
+    state: "Goa",
+    stateCode: "30",
+    pinCode: "403517",
+    gstin: "30AAECO0806H1Z1",
+    pan: "AAECO0806H",
+    tel: "08322272276",
+    email: "billing@ofinit.com",
+    website: "https://ofinit.com",
+    bankDetails: {
+      accountName: "OfinIT Solutions Pvt. Ltd.",
+      bankName: "Yes Bank Ltd.",
+      accountNo: "002785800008003",
+      branch: "Panaji",
+      ifsc: "YESB0000027",
+    },
   }
 }
 

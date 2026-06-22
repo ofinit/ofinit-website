@@ -114,7 +114,12 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
                 {invoice.supplier.city ? `${invoice.supplier.city}, ` : ""}
                 {invoice.supplier.state} {invoice.supplier.pinCode}
               </Text>
-              {invoice.supplier.gstin ? <Text>GSTIN: {invoice.supplier.gstin}</Text> : null}
+              {invoice.supplier.tel ? <Text>Tel.: {invoice.supplier.tel}</Text> : null}
+              {invoice.supplier.email ? <Text>Email: {invoice.supplier.email}</Text> : null}
+              {invoice.supplier.gstin ? (
+                <Text style={{ fontWeight: 700, marginTop: 2 }}>GSTIN: {invoice.supplier.gstin}</Text>
+              ) : null}
+              {invoice.supplier.website ? <Text>{invoice.supplier.website}</Text> : null}
             </View>
           </View>
 
@@ -252,6 +257,55 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
             </Text>
           </View>
         </View>
+
+        {/* ── Bank Details + PAN ───────────────────────────────── */}
+        {(invoice.supplier.bankDetails || invoice.supplier.pan) ? (
+          <View
+            style={[
+              styles.section,
+              {
+                borderWidth: 1,
+                borderColor: "#e2e8f0",
+                padding: 10,
+                borderRadius: 2,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { marginBottom: 6 }]}>Payment Details</Text>
+            {invoice.supplier.pan ? (
+              <View style={[styles.row, { justifyContent: "flex-start", gap: 6, marginBottom: 6 }]}>
+                <Text style={{ color: "#666" }}>Company PAN:</Text>
+                <Text style={{ fontWeight: 700 }}>{invoice.supplier.pan}</Text>
+              </View>
+            ) : null}
+            {invoice.supplier.bankDetails ? (
+              <View style={{ flexDirection: "row", gap: 24, flexWrap: "wrap" }}>
+                <View style={{ gap: 3 }}>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666", width: 60 }}>A/c Name:</Text>
+                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountName}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666", width: 60 }}>Bank:</Text>
+                    <Text>{invoice.supplier.bankDetails.bankName}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666", width: 60 }}>A/c No.:</Text>
+                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountNo}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666", width: 60 }}>Branch:</Text>
+                    <Text>{invoice.supplier.bankDetails.branch}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666", width: 60 }}>IFSC:</Text>
+                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.ifsc}</Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* ── Footer ───────────────────────────────────────────── */}
         <Text

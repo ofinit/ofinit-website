@@ -1,10 +1,22 @@
 export type GstInvoiceType = "B2B" | "B2C"
 
+export type GstBankDetails = {
+  accountName: string
+  bankName: string
+  accountNo: string
+  branch: string
+  ifsc: string
+}
+
 export type GstParty = {
   legalName: string
   tradeName?: string
   /** Client email — used when sending invoice PDF */
   email?: string
+  /** Phone / Tel number */
+  tel?: string
+  /** Company website URL */
+  website?: string
   /** Public or data URL; shown on invoice header for supplier */
   logoUrl?: string
   addressLine1: string
@@ -12,9 +24,11 @@ export type GstParty = {
   city: string
   country: string
   state: string
-  stateCode: string // 2-digit (as string) GST state code, e.g. "27"
+  stateCode: string // 2-digit (as string) GST state code, e.g. "30"
   pinCode: string
   gstin?: string // optional; if present invoice is treated as B2B
+  pan?: string
+  bankDetails?: GstBankDetails
 }
 
 export type GstInvoiceItem = {
