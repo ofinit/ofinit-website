@@ -186,6 +186,7 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
             <Text style={[styles.cell, styles.right, { width: 68 }]}>Rate</Text>
             <Text style={[styles.cell, styles.right, { width: 68 }]}>Taxable</Text>
             <Text style={[styles.cell, styles.right, { width: 38 }]}>GST%</Text>
+            <Text style={[styles.cell, styles.right, { width: 58 }]}>Tax</Text>
             <Text style={[styles.cell, styles.right, { width: 70 }]}>Line total</Text>
           </View>
 
@@ -198,6 +199,11 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
               <Text style={[styles.cell, styles.right, { width: 68 }]}>{inr(it.unitPriceInr)}</Text>
               <Text style={[styles.cell, styles.right, { width: 68 }]}>{inr(it.taxableValue)}</Text>
               <Text style={[styles.cell, styles.right, { width: 38 }]}>{String(it.gstRate)}</Text>
+              <Text style={[styles.cell, styles.right, { width: 58 }]}>
+                {computed.supplyType === "INTRA_STATE"
+                  ? inr(it.tax.cgstAmount + it.tax.sgstAmount)
+                  : inr(it.tax.igstAmount)}
+              </Text>
               <Text style={[styles.cell, styles.right, { width: 70 }]}>{inr(it.tax.lineTotal)}</Text>
             </View>
           ))}
