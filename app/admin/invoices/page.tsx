@@ -19,7 +19,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Trash2, Plus, Printer, Save, Mail, Users, Download, X } from "lucide-react"
+import { Trash2, Plus, Printer, Save, Mail, Users, Download, X, Calendar as CalendarIcon } from "lucide-react"
 
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
 import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY, parseDDMMYYYYToYYYYMMDD } from "@/lib/gst/invoice"
@@ -35,6 +35,8 @@ import {
   upsertGstBuyer,
 } from "@/app/actions/gst-actions"
 import { GstInvoicePreview } from "@/components/admin/gst-invoice-preview"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 
 const GST_RATES = [0, 5, 12, 18, 28] as const
 const COUNTRIES = ["India", "United States", "United Arab Emirates", "United Kingdom", "Singapore", "Australia", "Other"] as const
@@ -607,11 +609,44 @@ export default function AdminInvoicesPage() {
                 </div>
                 <div>
                   <Label>Date *</Label>
-                  <Input
-                    placeholder="DD/MM/YYYY"
-                    value={invoice.invoiceDate}
-                    onChange={(e) => setInvoice({ ...invoice, invoiceDate: e.target.value })}
-                  />
+                  <div className="relative flex items-center">
+                    <Input
+                      placeholder="DD/MM/YYYY"
+                      value={invoice.invoiceDate}
+                      onChange={(e) => setInvoice({ ...invoice, invoiceDate: e.target.value })}
+                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-muted"
+                          type="button"
+                        >
+                          <CalendarIcon className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={(() => {
+                            const yyyymmdd = parseDDMMYYYYToYYYYMMDD(invoice.invoiceDate)
+                            const d = new Date(yyyymmdd)
+                            return isNaN(d.getTime()) ? undefined : d
+                          })()}
+                          onSelect={(date) => {
+                            if (date) {
+                              const dd = String(date.getDate()).padStart(2, "0")
+                              const mm = String(date.getMonth() + 1).padStart(2, "0")
+                              const yyyy = date.getFullYear()
+                              setInvoice({ ...invoice, invoiceDate: `${dd}/${mm}/${yyyy}` })
+                            }
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   {errors.invoiceDate ? <p className="text-sm text-red-600 mt-1">{errors.invoiceDate}</p> : null}
                 </div>
               </div>
