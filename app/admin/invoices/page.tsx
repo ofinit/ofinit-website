@@ -22,7 +22,7 @@ import {
 import { Trash2, Plus, Printer, Save, Mail, Users, Download, X } from "lucide-react"
 
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
-import { computeInvoice, normalizeStateCode } from "@/lib/gst/invoice"
+import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
 import { createBlankInvoice } from "@/lib/gst/invoice-store"
 import { withDefaultSupplierLogo } from "@/lib/gst/supplier-defaults"
@@ -86,7 +86,7 @@ export default function AdminInvoicesPage() {
     return history.filter((inv) => {
       if (q) {
         const hay =
-          `${inv.invoiceNo} ${inv.invoiceDate} ${inv.buyer.legalName} ${inv.buyer.gstin || ""}`.toLowerCase()
+          `${inv.invoiceNo} ${inv.invoiceDate} ${formatDateToDDMMYYYY(inv.invoiceDate)} ${inv.buyer.legalName} ${inv.buyer.gstin || ""}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       if (from || to) {
@@ -166,7 +166,7 @@ export default function AdminInvoicesPage() {
       lines.push(
         [
           inv.invoiceNo,
-          inv.invoiceDate,
+          formatDateToDDMMYYYY(inv.invoiceDate),
           inv.invoiceType,
           inv.buyer.legalName,
           inv.buyer.gstin ?? "",
@@ -1000,7 +1000,7 @@ export default function AdminInvoicesPage() {
                             />
                           </TableCell>
                           <TableCell className="font-medium">{inv.invoiceNo}</TableCell>
-                          <TableCell>{inv.invoiceDate}</TableCell>
+                          <TableCell>{formatDateToDDMMYYYY(inv.invoiceDate)}</TableCell>
                           <TableCell>{inv.buyer.legalName || "—"}</TableCell>
                           <TableCell>{inv.buyer.state || inv.buyer.stateCode || "—"}</TableCell>
                           <TableCell>{inv.invoiceType}</TableCell>

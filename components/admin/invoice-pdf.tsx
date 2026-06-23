@@ -1,6 +1,6 @@
 import { Document, Font, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
 import type { GstInvoice } from "@/lib/gst/invoice"
-import { computeInvoice } from "@/lib/gst/invoice"
+import { computeInvoice, formatDateToDDMMYYYY } from "@/lib/gst/invoice"
 import { DEFAULT_SUPPLIER_LOGO_URL } from "@/lib/gst/supplier-defaults"
 
 // Register Noto Sans from Google Fonts — supports the ₹ (U+20B9) Rupee glyph
@@ -135,7 +135,7 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
               Invoice
             </Text>
             <Text style={{ textAlign: "right" }}>Invoice No: {invoice.invoiceNo}</Text>
-            <Text style={{ textAlign: "right" }}>Date: {invoice.invoiceDate}</Text>
+            <Text style={{ textAlign: "right" }}>Date: {formatDateToDDMMYYYY(invoice.invoiceDate)}</Text>
             <Text style={{ textAlign: "right", marginTop: 6 }}>
               Supply type: {computed.supplyType === "INTRA_STATE" ? "Intra-state (CGST+SGST)" : "Inter-state (IGST)"}
             </Text>

@@ -1,4 +1,4 @@
-import { computeInvoice } from "@/lib/gst/invoice"
+import { computeInvoice, formatDateToDDMMYYYY } from "@/lib/gst/invoice"
 import type { GstInvoice } from "@/lib/gst/invoice"
 import { getSmtpFromAddress, isSmtpConfigured, sendMail } from "@/lib/email/smtp"
 
@@ -31,11 +31,12 @@ export async function sendGstInvoiceEmail(params: {
   const supplier = invoice.supplier.legalName || "OfinIT"
   const buyer = invoice.buyer.legalName || "Customer"
   const total = fmtINR(computed.totals.grandTotal)
+  const formattedDate = formatDateToDDMMYYYY(invoice.invoiceDate)
 
   const subject = `Tax invoice ${invoice.invoiceNo} from ${supplier}`
   const text = `Dear ${buyer},
 
-Please find attached tax invoice ${invoice.invoiceNo} dated ${invoice.invoiceDate}.
+Please find attached tax invoice ${invoice.invoiceNo} dated ${formattedDate}.
 
 Grand total: ${total}
 
@@ -46,7 +47,7 @@ ${supplier}
 `
 
   const html = `<p>Dear ${buyer},</p>
-<p>Please find attached tax invoice <strong>${invoice.invoiceNo}</strong> dated ${invoice.invoiceDate}.</p>
+<p>Please find attached tax invoice <strong>${invoice.invoiceNo}</strong> dated ${formattedDate}.</p>
 <p><strong>Grand total:</strong> ${total}</p>
 <p>If you have any questions, reply to this email.</p>
 <p>Regards,<br/>${supplier}</p>`

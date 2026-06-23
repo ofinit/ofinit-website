@@ -1,7 +1,7 @@
 "use client"
 
 import type { GstInvoice, GstInvoiceComputed, GstParty } from "@/lib/gst/invoice"
-import { computeInvoice } from "@/lib/gst/invoice"
+import { computeInvoice, formatDateToDDMMYYYY } from "@/lib/gst/invoice"
 import { resolveSupplierLogoUrl } from "@/lib/gst/supplier-defaults"
 import { cn } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -80,7 +80,7 @@ export function GstInvoicePreview({
         <div className="text-sm text-gray-800 text-right">
           <div className="font-semibold">Invoice</div>
           <div>Invoice No: {invoice.invoiceNo}</div>
-          <div>Date: {invoice.invoiceDate}</div>
+          <div>Date: {formatDateToDDMMYYYY(invoice.invoiceDate)}</div>
           <div className="mt-2">
             Supply type:{" "}
             <span className="font-medium">

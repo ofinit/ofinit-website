@@ -211,3 +211,35 @@ export function computeInvoice(invoice: GstInvoice): GstInvoiceComputed {
   }
 }
 
+export function formatDateToDDMMYYYY(dateStr: string | undefined | null): string {
+  if (!dateStr) return ""
+  const clean = dateStr.trim()
+  if (!clean) return ""
+
+  const parts = clean.split("-")
+  if (parts.length === 3 && parts[0].length === 4) {
+    const [yyyy, mm, dd] = parts
+    return `${dd}/${mm}/${yyyy}`
+  }
+
+  const partsSlash = clean.split("/")
+  if (partsSlash.length === 3 && partsSlash[2].length === 4) {
+    return clean
+  }
+
+  try {
+    const d = new Date(clean)
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2, "0")
+      const mm = String(d.getMonth() + 1).padStart(2, "0")
+      const yyyy = d.getFullYear()
+      return `${dd}/${mm}/${yyyy}`
+    }
+  } catch {
+    // Ignore
+  }
+
+  return dateStr
+}
+
+
