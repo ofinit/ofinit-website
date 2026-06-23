@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/command"
 import { Trash2, Plus, Printer, Save, Mail, Users, Download, X, Calendar as CalendarIcon } from "lucide-react"
 
-import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
+import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty, GstInvoiceComputed } from "@/lib/gst/invoice"
 import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY, parseDDMMYYYYToYYYYMMDD } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
 import { createBlankInvoice } from "@/lib/gst/invoice-store"
@@ -58,6 +58,191 @@ function fmtINR(value: number) {
     currency: "INR",
     maximumFractionDigits: 2,
   }).format(value)
+}
+
+interface FxRateInputProps {
+  value: number
+  onChange: (val: number) => void
+}
+
+function FxRateInput({ value, onChange }: FxRateInputProps) {
+  const [localValue, setLocalValue] = useState(String(value))
+
+  useEffect(() => {
+    if (Number(localValue) !== value) {
+      setLocalValue(String(value))
+    }
+  }, [value, localValue])
+
+  return (
+    <Input
+      inputMode="decimal"
+      value={localValue}
+      onChange={(e) => {
+        setLocalValue(e.target.value)
+        onChange(safeNumber(e.target.value, value || 83))
+      }}
+    />
+  )
+}
+
+function GstInvoiceItemCard({
+  it,
+  idx,
+  errors,
+  invoice,
+  computed,
+  updateItem,
+  removeItem,
+  refreshWorkspace,
+}: {
+  it: GstInvoiceItem
+  idx: number
+  errors: FormErrors
+  invoice: GstInvoice
+  computed: GstInvoiceComputed | null
+  updateItem: (itemId: string, patch: Partial<GstInvoiceItem>) => void
+  removeItem: (itemId: string) => void
+  refreshWorkspace: () => Promise<void>
+}) {
+  const [localQty, setLocalQty] = useState(String(it.qty))
+  const [localPrice, setLocalPrice] = useState(String(it.unitPrice))
+  const [localDiscount, setLocalDiscount] = useState(String(it.discount))
+
+  useEffect(() => {
+    if (Number(localQty) !== it.qty) {
+      setLocalQty(String(it.qty))
+    }
+  }, [it.qty, localQty])
+
+  useEffect(() => {
+    if (Number(localPrice) !== it.unitPrice) {
+      setLocalPrice(String(it.unitPrice))
+    }
+  }, [it.unitPrice, localPrice])
+
+  useEffect(() => {
+    if (Number(localDiscount) !== it.discount) {
+      setLocalDiscount(String(it.discount))
+    }
+  }, [it.discount, localDiscount])
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <Label>Description *</Label>
+            <Input value={it.description} onChange={(e) => updateItem(it.id, { description: e.target.value })} />
+            {errors[`item_${idx}_desc`] ? (
+              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_desc`]}</p>
+            ) : null}
+          </div>
+          <div>
+            <Label>HSN/SAC</Label>
+            <Input
+              list="hsn-sac-list"
+              value={it.hsnSac || ""}
+              onChange={(e) => updateItem(it.id, { hsnSac: e.target.value.toUpperCase() })}
+              onBlur={async (e) => {
+                const val = e.currentTarget.value.trim().toUpperCase()
+                if (!val) return
+                try {
+                  await addGstHsn(val)
+                  await refreshWorkspace()
+                } catch {
+                  /* ignore */
+                }
+              }}
+              placeholder="Type to search or enter new"
+            />
+          </div>
+          <div>
+            <Label>GST Rate</Label>
+            <Select value={String(it.gstRate)} onValueChange={(v) => updateItem(it.id, { gstRate: Number(v) })}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="GST%" />
+              </SelectTrigger>
+              <SelectContent>
+                {GST_RATES.map((r) => (
+                  <SelectItem key={r} value={String(r)}>
+                    {r}%
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Qty *</Label>
+            <Input
+              inputMode="decimal"
+              value={localQty}
+              onChange={(e) => {
+                setLocalQty(e.target.value)
+                updateItem(it.id, { qty: safeNumber(e.target.value, 1) })
+              }}
+            />
+            {errors[`item_${idx}_qty`] ? <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_qty`]}</p> : null}
+          </div>
+          <div>
+            <Label>Rate *</Label>
+            <Input
+              inputMode="decimal"
+              value={localPrice}
+              onChange={(e) => {
+                setLocalPrice(e.target.value)
+                updateItem(it.id, { unitPrice: safeNumber(e.target.value, 0) })
+              }}
+            />
+            {errors[`item_${idx}_price`] ? (
+              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_price`]}</p>
+            ) : null}
+          </div>
+          <div>
+            <Label>Discount</Label>
+            <Input
+              inputMode="decimal"
+              value={localDiscount}
+              onChange={(e) => {
+                setLocalDiscount(e.target.value)
+                updateItem(it.id, { discount: safeNumber(e.target.value, 0) })
+              }}
+            />
+            {errors[`item_${idx}_discount`] ? (
+              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_discount`]}</p>
+            ) : null}
+          </div>
+          <div className="flex items-end">
+            <div className="text-sm text-gray-600">
+              <div>Taxable</div>
+              <div className="font-semibold text-gray-900">
+                {computed ? fmtINR(computed.items[idx]?.taxableValue ?? 0) : "—"}
+              </div>
+              {invoice.pricingCurrency === "USD" && computed ? (
+                <div className="text-xs text-gray-500">
+                  USD line:{" "}
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 2,
+                  }).format((it.qty * it.unitPrice - it.discount) || 0)}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          className="bg-transparent text-red-600 hover:text-red-700"
+          onClick={() => removeItem(it.id)}
+          disabled={invoice.items.length === 1}
+          title={invoice.items.length === 1 ? "At least one item is required" : "Remove item"}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </Card>
+  )
 }
 
 export default function AdminInvoicesPage() {
@@ -771,10 +956,9 @@ export default function AdminInvoicesPage() {
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>USD → INR rate</Label>
-                      <Input
-                        inputMode="decimal"
-                        value={String(invoice.fxUsdInr || 0)}
-                        onChange={(e) => setInvoice({ ...invoice, fxUsdInr: safeNumber(e.target.value, invoice.fxUsdInr || 83) })}
+                      <FxRateInput
+                        value={invoice.fxUsdInr || 0}
+                        onChange={(val) => setInvoice({ ...invoice, fxUsdInr: val })}
                       />
                       <p className="text-xs text-gray-500 mt-1">Auto-fetched, editable.</p>
                     </div>
@@ -789,111 +973,17 @@ export default function AdminInvoicesPage() {
 
                 <div className="mt-4 space-y-4">
                   {invoice.items.map((it, idx) => (
-                    <Card key={it.id} className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="md:col-span-2">
-                            <Label>Description *</Label>
-                            <Input value={it.description} onChange={(e) => updateItem(it.id, { description: e.target.value })} />
-                            {errors[`item_${idx}_desc`] ? (
-                              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_desc`]}</p>
-                            ) : null}
-                          </div>
-                          <div>
-                            <Label>HSN/SAC</Label>
-                            <Input
-                              list="hsn-sac-list"
-                              value={it.hsnSac || ""}
-                              onChange={(e) => updateItem(it.id, { hsnSac: e.target.value.toUpperCase() })}
-                              onBlur={async (e) => {
-                                const val = e.currentTarget.value.trim().toUpperCase()
-                                if (!val) return
-                                try {
-                                  await addGstHsn(val)
-                                  await refreshWorkspace()
-                                } catch {
-                                  /* ignore */
-                                }
-                              }}
-                              placeholder="Type to search or enter new"
-                            />
-                          </div>
-                          <div>
-                            <Label>GST Rate</Label>
-                            <Select value={String(it.gstRate)} onValueChange={(v) => updateItem(it.id, { gstRate: Number(v) })}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="GST%" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {GST_RATES.map((r) => (
-                                  <SelectItem key={r} value={String(r)}>
-                                    {r}%
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label>Qty *</Label>
-                            <Input
-                              inputMode="decimal"
-                              value={String(it.qty)}
-                              onChange={(e) => updateItem(it.id, { qty: safeNumber(e.target.value, 1) })}
-                            />
-                            {errors[`item_${idx}_qty`] ? <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_qty`]}</p> : null}
-                          </div>
-                          <div>
-                            <Label>Rate *</Label>
-                            <Input
-                              inputMode="decimal"
-                              value={String(it.unitPrice)}
-                              onChange={(e) => updateItem(it.id, { unitPrice: safeNumber(e.target.value, 0) })}
-                            />
-                            {errors[`item_${idx}_price`] ? (
-                              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_price`]}</p>
-                            ) : null}
-                          </div>
-                          <div>
-                            <Label>Discount</Label>
-                            <Input
-                              inputMode="decimal"
-                              value={String(it.discount)}
-                              onChange={(e) => updateItem(it.id, { discount: safeNumber(e.target.value, 0) })}
-                            />
-                            {errors[`item_${idx}_discount`] ? (
-                              <p className="text-sm text-red-600 mt-1">{errors[`item_${idx}_discount`]}</p>
-                            ) : null}
-                          </div>
-                          <div className="flex items-end">
-                            <div className="text-sm text-gray-600">
-                              <div>Taxable</div>
-                              <div className="font-semibold text-gray-900">
-                                {computed ? fmtINR(computed.items[idx]?.taxableValue ?? 0) : "—"}
-                              </div>
-                              {invoice.pricingCurrency === "USD" && computed ? (
-                                <div className="text-xs text-gray-500">
-                                  USD line:{" "}
-                                  {new Intl.NumberFormat("en-US", {
-                                    style: "currency",
-                                    currency: "USD",
-                                    maximumFractionDigits: 2,
-                                  }).format((it.qty * it.unitPrice - it.discount) || 0)}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="bg-transparent text-red-600 hover:text-red-700"
-                          onClick={() => removeItem(it.id)}
-                          disabled={invoice.items.length === 1}
-                          title={invoice.items.length === 1 ? "At least one item is required" : "Remove item"}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </Card>
+                    <GstInvoiceItemCard
+                      key={it.id}
+                      it={it}
+                      idx={idx}
+                      errors={errors}
+                      invoice={invoice}
+                      computed={computed}
+                      updateItem={updateItem}
+                      removeItem={removeItem}
+                      refreshWorkspace={refreshWorkspace}
+                    />
                   ))}
                 </div>
               </div>
