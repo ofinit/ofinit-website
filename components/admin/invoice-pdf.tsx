@@ -336,38 +336,45 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
             ]}
           >
             <Text style={[styles.label, { marginBottom: 6 }]}>Payment Details</Text>
-            {invoice.supplier.pan ? (
-              <View style={[styles.row, { justifyContent: "flex-start", gap: 6, marginBottom: 6 }]}>
-                <Text style={{ color: "#666" }}>Company PAN:</Text>
-                <Text style={{ fontWeight: 700 }}>{invoice.supplier.pan}</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+              {/* Left Column: PAN */}
+              <View style={{ flex: 1 }}>
+                {invoice.supplier.pan ? (
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Text style={{ color: "#666" }}>Company PAN:</Text>
+                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.pan}</Text>
+                  </View>
+                ) : null}
               </View>
-            ) : null}
-            {invoice.supplier.bankDetails ? (
-              <View style={{ flexDirection: "row", gap: 24, flexWrap: "wrap" }}>
-                <View style={{ gap: 3 }}>
-                  <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Text style={{ color: "#666", width: 60 }}>A/c Name:</Text>
-                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountName}</Text>
+
+              {/* Right Column: Bank Details */}
+              <View style={{ flex: 1 }}>
+                {invoice.supplier.bankDetails ? (
+                  <View style={{ gap: 3 }}>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <Text style={{ color: "#666", width: 60 }}>A/c Name:</Text>
+                      <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountName}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <Text style={{ color: "#666", width: 60 }}>Bank:</Text>
+                      <Text>{invoice.supplier.bankDetails.bankName}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <Text style={{ color: "#666", width: 60 }}>A/c No.:</Text>
+                      <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountNo}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <Text style={{ color: "#666", width: 60 }}>Branch:</Text>
+                      <Text>{invoice.supplier.bankDetails.branch}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <Text style={{ color: "#666", width: 60 }}>IFSC:</Text>
+                      <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.ifsc}</Text>
+                    </View>
                   </View>
-                  <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Text style={{ color: "#666", width: 60 }}>Bank:</Text>
-                    <Text>{invoice.supplier.bankDetails.bankName}</Text>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Text style={{ color: "#666", width: 60 }}>A/c No.:</Text>
-                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.accountNo}</Text>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Text style={{ color: "#666", width: 60 }}>Branch:</Text>
-                    <Text>{invoice.supplier.bankDetails.branch}</Text>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 6 }}>
-                    <Text style={{ color: "#666", width: 60 }}>IFSC:</Text>
-                    <Text style={{ fontWeight: 700 }}>{invoice.supplier.bankDetails.ifsc}</Text>
-                  </View>
-                </View>
+                ) : null}
               </View>
-            ) : null}
+            </View>
           </View>
         ) : null}
 
