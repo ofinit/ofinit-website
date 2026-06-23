@@ -22,7 +22,7 @@ import {
 import { Trash2, Plus, Printer, Save, Mail, Users, Download, X } from "lucide-react"
 
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty } from "@/lib/gst/invoice"
-import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY } from "@/lib/gst/invoice"
+import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY, parseDDMMYYYYToYYYYMMDD } from "@/lib/gst/invoice"
 import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
 import { createBlankInvoice } from "@/lib/gst/invoice-store"
 import { withDefaultSupplierLogo } from "@/lib/gst/supplier-defaults"
@@ -205,7 +205,8 @@ export default function AdminInvoicesPage() {
         setBuyers(d.buyers)
         setHsnList(d.hsnList)
         setSupplierProfile(d.supplier)
-        setInvoice(createBlankInvoice({ invoiceType: "B2B", existingInvoices: d.invoices, supplier: d.supplier }))
+        const blank = createBlankInvoice({ invoiceType: "B2B", existingInvoices: d.invoices, supplier: d.supplier })
+        setInvoice({ ...blank, invoiceDate: formatDateToDDMMYYYY(blank.invoiceDate) })
         setGstError(null)
         setGstReady(true)
       })
@@ -281,7 +282,11 @@ export default function AdminInvoicesPage() {
   function validate(current: GstInvoice): FormErrors {
     const next: FormErrors = {}
     if (!current.invoiceNo.trim()) next.invoiceNo = "Invoice number is required."
-    if (!current.invoiceDate.trim()) next.invoiceDate = "Invoice date is required."
+    if (!current.invoiceDate.trim()) {
+      next.invoiceDate = "Invoice date is required."
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(current.invoiceDate)) {
+      next.invoiceDate = "Enter a valid date in DD/MM/YYYY format."
+    }
 
     if (!current.supplier.legalName.trim()) next.supplierName = "Supplier legal name is required."
     if (!current.supplier.stateCode.trim()) next.supplierStateCode = "Supplier state code is required."
@@ -383,6 +388,7 @@ export default function AdminInvoicesPage() {
   function normalizeInvoice(current: GstInvoice): GstInvoice {
     return {
       ...current,
+      invoiceDate: parseDDMMYYYYToYYYYMMDD(current.invoiceDate),
       supplier: withDefaultSupplierLogo({
         ...current.supplier,
         stateCode: normalizeStateCode(current.supplier.stateCode),
@@ -405,7 +411,10 @@ export default function AdminInvoicesPage() {
     try {
       await upsertGstBuyer(normalized.buyer)
       await saveGstInvoice(normalized)
-      setInvoice(normalized)
+      setInvoice({
+        ...normalized,
+        invoiceDate: formatDateToDDMMYYYY(normalized.invoiceDate),
+      })
       await refreshWorkspace()
       setActiveTab("history")
     } catch {
@@ -432,7 +441,10 @@ export default function AdminInvoicesPage() {
         alert(result.error)
         return
       }
-      setInvoice(normalized)
+      setInvoice({
+        ...normalized,
+        invoiceDate: formatDateToDDMMYYYY(normalized.invoiceDate),
+      })
       await refreshWorkspace()
       alert(`Invoice saved and emailed to ${normalized.buyer.email}.`)
       setActiveTab("history")
@@ -445,7 +457,8 @@ export default function AdminInvoicesPage() {
 
   function onNew(type: GstInvoiceType) {
     setErrors({})
-    setInvoice(createBlankInvoice({ invoiceType: type, existingInvoices: history, supplier: supplierProfile }))
+    const blank = createBlankInvoice({ invoiceType: type, existingInvoices: history, supplier: supplierProfile })
+    setInvoice({ ...blank, invoiceDate: formatDateToDDMMYYYY(blank.invoiceDate) })
     setActiveTab("create")
   }
 
@@ -477,7 +490,10 @@ export default function AdminInvoicesPage() {
 
   function openFromHistory(inv: GstInvoice) {
     setErrors({})
-    setInvoice(inv)
+    setInvoice({
+      ...inv,
+      invoiceDate: formatDateToDDMMYYYY(inv.invoiceDate),
+    })
     setActiveTab("create")
   }
 
@@ -592,7 +608,7 @@ export default function AdminInvoicesPage() {
                 <div>
                   <Label>Date *</Label>
                   <Input
-                    type="date"
+                    placeholder="DD/MM/YYYY"
                     value={invoice.invoiceDate}
                     onChange={(e) => setInvoice({ ...invoice, invoiceDate: e.target.value })}
                   />
