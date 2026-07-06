@@ -166,7 +166,7 @@ export function computeInvoice(invoice: GstInvoice): GstInvoiceComputed {
     const qty = Number.isFinite(item.qty) ? item.qty : 0
     const unitPrice = Number.isFinite(item.unitPrice) ? item.unitPrice : 0
     const discount = Number.isFinite(item.discount) ? item.discount : 0
-    const fx = Number.isFinite(invoice.fxUsdInr) && invoice.fxUsdInr > 0 ? invoice.fxUsdInr : 0
+    const fx = Number.isFinite(invoice.fxUsdInr) && invoice.fxUsdInr > 0 ? invoice.fxUsdInr : 83
     const unitPriceInr = invoice.pricingCurrency === "USD" ? unitPrice * fx : unitPrice
     const discountInr = invoice.pricingCurrency === "USD" ? discount * fx : discount
 

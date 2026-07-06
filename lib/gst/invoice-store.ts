@@ -82,7 +82,7 @@ export function createBlankInvoice(params?: {
     invoiceType,
     currency: "INR",
     pricingCurrency: "INR",
-    fxUsdInr: 83,
+    fxUsdInr: 0,
     supplier,
     buyer,
     placeOfSupplyStateCode: "",
