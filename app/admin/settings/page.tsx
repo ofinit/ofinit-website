@@ -13,7 +13,7 @@ import { TurnstileSettingsPanel } from "@/components/admin/turnstile-settings-pa
 import { SearchableSelect } from "@/components/ui/searchable-select"
 
 import type { GstParty } from "@/lib/gst/invoice"
-import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
+import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/country-states"
 import { changeAdminEmail, changeAdminPassword, getAdminAccountInfo } from "@/app/actions/admin-actions"
 import { loadSupplierProfileFromDb, saveSupplierProfileToDb } from "@/app/actions/gst-actions"
 import { getPublicContactSettings, savePublicContactSettings } from "@/app/actions/site-content-actions"

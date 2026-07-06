@@ -23,7 +23,8 @@ import { Trash2, Plus, Printer, Save, Mail, Users, Download, X, Calendar as Cale
 
 import type { GstInvoice, GstInvoiceItem, GstInvoiceType, GstParty, GstInvoiceComputed } from "@/lib/gst/invoice"
 import { computeInvoice, normalizeStateCode, formatDateToDDMMYYYY, parseDDMMYYYYToYYYYMMDD } from "@/lib/gst/invoice"
-import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/india-states"
+import { getIndiaStateNameByCode } from "@/lib/gst/india-states"
+import { getStateNameByCode, COUNTRY_STATES_MAP } from "@/lib/gst/country-states"
 import { createBlankInvoice } from "@/lib/gst/invoice-store"
 import { withDefaultSupplierLogo } from "@/lib/gst/supplier-defaults"
 import {
@@ -421,13 +422,14 @@ export default function AdminInvoicesPage() {
   // Place of supply always follows buyer state (both on buyer state change and when a new invoice loads)
   useEffect(() => {
     if (!invoice) return
+    const country = invoice.buyer.country || "India"
     const code = normalizeStateCode(invoice.buyer.stateCode || "")
-    const name = getIndiaStateNameByCode(code)
+    const name = invoice.buyer.state || getStateNameByCode(country, code)
     if (!code || !name) return
     if (normalizeStateCode(invoice.placeOfSupplyStateCode || "") !== code || invoice.placeOfSupplyState !== name) {
       setInvoice((prev) => prev ? { ...prev, placeOfSupplyStateCode: code, placeOfSupplyState: name } : prev)
     }
-  }, [invoice?.buyer.stateCode, invoice?.id])
+  }, [invoice?.buyer.stateCode, invoice?.buyer.state, invoice?.buyer.country, invoice?.id])
 
   // Auto pricing currency from buyer country
   useEffect(() => {
@@ -887,27 +889,81 @@ export default function AdminInvoicesPage() {
                       placeholder="Select country"
                       searchPlaceholder="Search country..."
                       options={COUNTRIES.map((c) => ({ value: c, label: c }))}
-                      onChange={(v) => setInvoice({ ...invoice, buyer: updateParty(invoice.buyer, { country: v }) })}
+                      onChange={(v) => {
+                        const sameCountry = invoice.buyer.country === v
+                        setInvoice({
+                          ...invoice,
+                          buyer: updateParty(invoice.buyer, {
+                            country: v,
+                            state: sameCountry ? invoice.buyer.state : "",
+                            stateCode: sameCountry ? invoice.buyer.stateCode : "",
+                          }),
+                          placeOfSupplyState: sameCountry ? invoice.placeOfSupplyState : "",
+                          placeOfSupplyStateCode: sameCountry ? invoice.placeOfSupplyStateCode : "",
+                        })
+                      }}
                     />
                     {invoice.buyer.country !== "India" ? (
                       <p className="text-xs text-gray-500 mt-1">International buyer: enter prices in USD; we’ll show INR + USD.</p>
                     ) : null}
                   </div>
                   <div>
-                    <Label>State</Label>
-                    <SearchableSelect
-                      value={normalizeStateCode(invoice.buyer.stateCode || "")}
-                      placeholder={(invoice.buyer.country || "India") !== "India" ? "N/A" : "Select state"}
-                      searchPlaceholder="Search state..."
-                      disabled={(invoice.buyer.country || "India") !== "India"}
-                      options={INDIA_GST_STATES.map((s) => ({ value: s.code, label: s.name, keywords: s.code }))}
-                      onChange={(v) =>
-                        setInvoice({
-                          ...invoice,
-                          buyer: updateParty(invoice.buyer, { stateCode: v, state: getIndiaStateNameByCode(v) }),
-                        })
+                    {(() => {
+                      const country = invoice.buyer.country || "India"
+                      const mappedStates = COUNTRY_STATES_MAP[country]
+                      if (mappedStates) {
+                        return (
+                          <>
+                            <Label>State</Label>
+                            <SearchableSelect
+                              value={normalizeStateCode(invoice.buyer.stateCode || "")}
+                              placeholder="Select state"
+                              searchPlaceholder="Search state..."
+                              options={mappedStates.map((s) => ({ value: s.code, label: s.name, keywords: s.code }))}
+                              onChange={(v) =>
+                                setInvoice({
+                                  ...invoice,
+                                  buyer: updateParty(invoice.buyer, {
+                                    stateCode: v,
+                                    state: getStateNameByCode(country, v),
+                                  }),
+                                })
+                              }
+                            />
+                          </>
+                        )
                       }
-                    />
+                      return (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label>State Name</Label>
+                            <Input
+                              placeholder="e.g. California"
+                              value={invoice.buyer.state || ""}
+                              onChange={(e) =>
+                                setInvoice({
+                                  ...invoice,
+                                  buyer: updateParty(invoice.buyer, { state: e.target.value }),
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label>State Code</Label>
+                            <Input
+                              placeholder="e.g. CA"
+                              value={invoice.buyer.stateCode || ""}
+                              onChange={(e) =>
+                                setInvoice({
+                                  ...invoice,
+                                  buyer: updateParty(invoice.buyer, { stateCode: e.target.value.toUpperCase() }),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                   <div className="md:col-span-2">
                     <Label>Email (for sending invoice)</Label>

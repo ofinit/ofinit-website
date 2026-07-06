@@ -9,7 +9,7 @@
 import { PrismaClient } from "@prisma/client"
 import type { GstInvoice } from "../lib/gst/invoice"
 import { normalizeStateCode } from "../lib/gst/invoice"
-import { getIndiaStateNameByCode } from "../lib/gst/india-states"
+import { getIndiaStateNameByCode } from "../lib/gst/country-states"
 
 const prisma = new PrismaClient()
 
