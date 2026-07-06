@@ -244,82 +244,98 @@ export function InvoicePdfDocument({ invoice }: { invoice: GstInvoice }) {
           ))}
         </View>
 
-        {/* ── Totals ───────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.section,
-            {
-              alignSelf: "flex-end",
+        {/* ── Notes & Totals ────────────────────────────────────── */}
+        <View style={[styles.row, styles.section]}>
+          {/* Notes */}
+          <View style={{ flex: 1, marginRight: 12 }}>
+            {invoice.notes ? (
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#e2e8f0",
+                  padding: 10,
+                  borderRadius: 2,
+                }}
+              >
+                <Text style={[styles.label, { marginBottom: 4 }]}>Notes</Text>
+                <Text style={{ fontSize: 8, lineHeight: 1.3 }}>{invoice.notes}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Totals */}
+          <View
+            style={{
               width: 240,
               borderWidth: 1,
               borderColor: "#e2e8f0",
               padding: 10,
               borderRadius: 2,
               gap: 4,
-            },
-          ]}
-        >
-          <View style={styles.row}>
-            <Text>Taxable value</Text>
-            <Text style={styles.right}>{inr(computed.totals.taxableValue)}</Text>
-          </View>
-
-          {computed.supplyType === "INTRA_STATE" ? (
-            <>
-              <View style={styles.row}>
-                <Text>CGST</Text>
-                <Text style={styles.right}>{inr(computed.totals.cgstAmount)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text>SGST</Text>
-                <Text style={styles.right}>{inr(computed.totals.sgstAmount)}</Text>
-              </View>
-            </>
-          ) : (
-            <View style={styles.row}>
-              <Text>IGST</Text>
-              <Text style={styles.right}>{inr(computed.totals.igstAmount)}</Text>
-            </View>
-          )}
-
-          <View style={styles.row}>
-            <Text>Total tax</Text>
-            <Text style={styles.right}>{inr(computed.totals.totalTax)}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text>Invoice total</Text>
-            <Text style={styles.right}>{inr(computed.totals.invoiceTotal)}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text>Rounded off</Text>
-            <Text style={styles.right}>{inr(computed.totals.roundedOff)}</Text>
-          </View>
-
-          <View
-            style={[
-              styles.row,
-              {
-                marginTop: 4,
-                paddingTop: 6,
-                borderTopWidth: 1,
-                borderTopColor: "#ddd",
-              },
-            ]}
+            }}
           >
-            <Text style={{ fontWeight: 700 }}>Grand total</Text>
-            <Text style={[styles.right, { fontWeight: 700 }]}>
-              {inr(computed.totals.grandTotal)}
-            </Text>
-          </View>
-
-          {isInternational ? (
             <View style={styles.row}>
-              <Text style={{ color: "#444" }}>Grand total (USD)</Text>
-              <Text style={[styles.right, { color: "#444" }]}>
-                {usd(computed.totals.grandTotal / (invoice.fxUsdInr || 1))}
+              <Text>Taxable value</Text>
+              <Text style={styles.right}>{inr(computed.totals.taxableValue)}</Text>
+            </View>
+
+            {computed.supplyType === "INTRA_STATE" ? (
+              <>
+                <View style={styles.row}>
+                  <Text>CGST</Text>
+                  <Text style={styles.right}>{inr(computed.totals.cgstAmount)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text>SGST</Text>
+                  <Text style={styles.right}>{inr(computed.totals.sgstAmount)}</Text>
+                </View>
+              </>
+            ) : (
+              <View style={styles.row}>
+                <Text>IGST</Text>
+                <Text style={styles.right}>{inr(computed.totals.igstAmount)}</Text>
+              </View>
+            )}
+
+            <View style={styles.row}>
+              <Text>Total tax</Text>
+              <Text style={styles.right}>{inr(computed.totals.totalTax)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text>Invoice total</Text>
+              <Text style={styles.right}>{inr(computed.totals.invoiceTotal)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text>Rounded off</Text>
+              <Text style={styles.right}>{inr(computed.totals.roundedOff)}</Text>
+            </View>
+
+            <View
+              style={[
+                styles.row,
+                {
+                  marginTop: 4,
+                  paddingTop: 6,
+                  borderTopWidth: 1,
+                  borderTopColor: "#ddd",
+                },
+              ]}
+            >
+              <Text style={{ fontWeight: 700 }}>Grand total</Text>
+              <Text style={[styles.right, { fontWeight: 700 }]}>
+                {inr(computed.totals.grandTotal)}
               </Text>
             </View>
-          ) : null}
+
+            {isInternational ? (
+              <View style={styles.row}>
+                <Text style={{ color: "#444" }}>Grand total (USD)</Text>
+                <Text style={[styles.right, { color: "#444" }]}>
+                  {usd(computed.totals.grandTotal / (invoice.fxUsdInr || 1))}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
         {/* ── Bank Details + PAN ───────────────────────────────── */}
