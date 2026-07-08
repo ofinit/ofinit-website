@@ -2,7 +2,7 @@ import type React from "react"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
-import { LayoutDashboard, FileText, Settings, Briefcase, FolderTree, Receipt, LogOut, LayoutTemplate, Inbox, FileSignature, Wrench, MapPin } from "lucide-react"
+import { LayoutDashboard, BarChart3, FileText, Settings, Briefcase, FolderTree, Receipt, LogOut, LayoutTemplate, Inbox, FileSignature, Wrench, MapPin } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -30,6 +30,14 @@ export default function AdminLayout({
             >
               <LayoutDashboard className="w-5 h-5" />
               <span>Dashboard</span>
+            </Link>
+
+            <Link
+              href="/admin/analytics"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>Analytics</span>
             </Link>
 
             <Link
