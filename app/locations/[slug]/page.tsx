@@ -15,9 +15,10 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
+const PRE_RENDER_LOCATIONS = ["usa", "canada", "dubai", "riyadh", "doha", "south-africa", "nigeria", "kenya", "egypt", "bangalore", "mumbai", "new-delhi", "noida", "gurgaon", "hyderabad", "pune", "chennai"]
+
 export async function generateStaticParams() {
-  const slugs = getAllLocationSlugs()
-  return slugs.map((slug) => ({ slug }))
+  return PRE_RENDER_LOCATIONS.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
