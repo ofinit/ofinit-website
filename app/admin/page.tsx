@@ -5,6 +5,7 @@ import { getAllCaseStudies } from "@/app/actions/case-study-actions"
 import { listBlogPostsForAdmin } from "@/app/actions/blog-actions"
 import { getHistoricalAnalytics, getRealtimeAnalytics } from "@/lib/analytics/tracker"
 import { AnalyticsCharts } from "@/components/admin/analytics-charts"
+import { Card } from "@/components/ui/card"
 
 export default async function AdminDashboard() {
   const blogPosts = await listBlogPostsForAdmin()
