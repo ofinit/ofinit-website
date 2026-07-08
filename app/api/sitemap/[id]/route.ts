@@ -105,21 +105,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
   }
 
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
+  const xmlParts = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
+  ]
 
   for (const u of urls) {
-    xml += `
-  <url>
+    xmlParts.push(`  <url>
     <loc>${u.loc}</loc>
     <lastmod>${u.lastmod}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
-  </url>`
+  </url>`)
   }
 
-  xml += `
-</urlset>`
+  xmlParts.push("</urlset>")
+  const xml = xmlParts.join("\n")
 
   return new NextResponse(xml, {
     headers: {
