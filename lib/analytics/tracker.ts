@@ -10,7 +10,11 @@ export interface PageViewRecord {
   device: string
 }
 
-const LOG_FILE = path.join(process.cwd(), "lib", "analytics", "logs.json")
+const LOG_FILE = process.env.ANALYTICS_LOG_FILE || (
+  process.env.NODE_ENV === "production"
+    ? path.join(process.cwd(), "data", "analytics", "logs.json")
+    : path.join(process.cwd(), "lib", "analytics", "logs.json")
+)
 
 // Ensure the log file directory exists
 function ensureLogFile() {

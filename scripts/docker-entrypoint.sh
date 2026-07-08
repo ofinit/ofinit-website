@@ -1,8 +1,8 @@
 #!/bin/sh
 # Do not use `set -e` — DB setup failures must not prevent the web server from starting.
 
-export HOME=/app
-export NPM_CONFIG_CACHE=/app/.npm-cache
+export HOME=/tmp
+export NPM_CONFIG_CACHE=/tmp/.npm-cache
 mkdir -p "$HOME" "$NPM_CONFIG_CACHE"
 
 case "${DATABASE_URL:-}" in
