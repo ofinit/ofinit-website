@@ -12,99 +12,115 @@ export interface PageViewRecord {
 
 const LOG_FILE = process.env.ANALYTICS_LOG_FILE || (
   process.env.NODE_ENV === "production"
-    ? path.join(process.cwd(), "data", "analytics", "logs.json")
+    ? path.join(process.cwd(), "data", "analytics_logs.json")
     : path.join(process.cwd(), "lib", "analytics", "logs.json")
 )
 
 // Ensure the log file directory exists
 function ensureLogFile() {
-  const dir = path.dirname(LOG_FILE)
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
-  }
-  if (!fs.existsSync(LOG_FILE)) {
-    seedHistoricalData()
+  try {
+    const dir = path.dirname(LOG_FILE)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+    if (!fs.existsSync(LOG_FILE)) {
+      seedHistoricalData()
+    }
+  } catch (e) {
+    console.error("Failed to ensure analytics log file:", e)
   }
 }
 
 // Seed historical analytics data for the last 30 days if empty
 export function seedHistoricalData() {
-  const records: PageViewRecord[] = []
-  const now = new Date()
-  const days = 30
+  try {
+    const records: PageViewRecord[] = []
+    const now = new Date()
+    const days = 30
 
-  const referrers = ["Google Search", "Direct", "LinkedIn", "GitHub", "Twitter", "Others"]
-  const countries = ["India", "United States", "United Arab Emirates", "Canada", "South Africa", "Nigeria", "Kenya", "Egypt"]
-  const devices = ["Desktop", "Mobile", "Tablet"]
-  const urls = [
-    "/",
-    "/locations",
-    "/locations/usa",
-    "/locations/canada",
-    "/locations/dubai",
-    "/locations/bangalore",
-    "/locations/mumbai",
-    "/blog",
-    "/blog/future-ai-integration-business-applications",
-    "/blog/nextjs-business-websites-performance-seo",
-    "/blog/bespoke-vs-saas-indian-enterprises-custom-software",
-    "/services/ai-integration",
-    "/services/web-development",
-    "/services/software-development"
-  ]
+    const referrers = ["Google Search", "Direct", "LinkedIn", "GitHub", "Twitter", "Others"]
+    const countries = ["India", "United States", "United Arab Emirates", "Canada", "South Africa", "Nigeria", "Kenya", "Egypt"]
+    const devices = ["Desktop", "Mobile", "Tablet"]
+    const urls = [
+      "/",
+      "/locations",
+      "/locations/usa",
+      "/locations/canada",
+      "/locations/dubai",
+      "/locations/bangalore",
+      "/locations/mumbai",
+      "/blog",
+      "/blog/future-ai-integration-business-applications",
+      "/blog/nextjs-business-websites-performance-seo",
+      "/blog/bespoke-vs-saas-indian-enterprises-custom-software",
+      "/services/ai-integration",
+      "/services/web-development",
+      "/services/software-development"
+    ]
 
-  // Generate ~4,500 records spread over 30 days
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-    // Daily pageview counts peak mid-week, range from 100 to 250
-    const dayOfWeek = date.getDay()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    const baseCount = isWeekend ? 80 : 180
-    const dailyViews = Math.floor(baseCount + Math.random() * 60)
+    // Generate ~4,500 records spread over 30 days
+    for (let i = days; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      // Daily pageview counts peak mid-week, range from 100 to 250
+      const dayOfWeek = date.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      const baseCount = isWeekend ? 80 : 180
+      const dailyViews = Math.floor(baseCount + Math.random() * 60)
 
-    for (let j = 0; j < dailyViews; j++) {
-      // Simulate random timestamp during the day
-      const hour = Math.floor(Math.random() * 24)
-      const min = Math.floor(Math.random() * 60)
-      const hitTime = new Date(date)
-      hitTime.setHours(hour, min, 0, 0)
+      for (let j = 0; j < dailyViews; j++) {
+        // Simulate random timestamp during the day
+        const hour = Math.floor(Math.random() * 24)
+        const min = Math.floor(Math.random() * 60)
+        const hitTime = new Date(date)
+        hitTime.setHours(hour, min, 0, 0)
 
-      // Random weights
-      const refIdx = Math.random() < 0.55 ? 0 : Math.floor(Math.random() * referrers.length) // bias to Google
-      const countIdx = Math.random() < 0.45 ? 0 : Math.random() < 0.75 ? 1 : Math.floor(Math.random() * countries.length) // bias to India/USA
-      const deviceIdx = Math.random() < 0.7 ? 0 : Math.random() < 0.95 ? 1 : 2 // bias to Desktop
-      const urlIdx = Math.random() < 0.3 ? 0 : Math.floor(Math.random() * urls.length)
+        // Random weights
+        const refIdx = Math.random() < 0.55 ? 0 : Math.floor(Math.random() * referrers.length) // bias to Google
+        const countIdx = Math.random() < 0.45 ? 0 : Math.random() < 0.75 ? 1 : Math.floor(Math.random() * countries.length) // bias to India/USA
+        const deviceIdx = Math.random() < 0.7 ? 0 : Math.random() < 0.95 ? 1 : 2 // bias to Desktop
+        const urlIdx = Math.random() < 0.3 ? 0 : Math.floor(Math.random() * urls.length)
 
-      records.push({
-        timestamp: hitTime.toISOString(),
-        url: urls[urlIdx],
-        referrer: referrers[refIdx],
-        country: countries[countIdx],
-        device: devices[deviceIdx],
-      })
+        records.push({
+          timestamp: hitTime.toISOString(),
+          url: urls[urlIdx],
+          referrer: referrers[refIdx],
+          country: countries[countIdx],
+          device: devices[deviceIdx],
+        })
+      }
     }
-  }
 
-  // Sort chronologically
-  records.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-  fs.writeFileSync(LOG_FILE, JSON.stringify(records, null, 2))
+    // Sort chronologically
+    records.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    fs.writeFileSync(LOG_FILE, JSON.stringify(records, null, 2))
+  } catch (e) {
+    console.error("Failed to seed historical data:", e)
+  }
 }
 
 // Read log records safely
 function readLogs(): PageViewRecord[] {
-  ensureLogFile()
   try {
+    ensureLogFile()
+    if (!fs.existsSync(LOG_FILE)) {
+      return []
+    }
     const data = fs.readFileSync(LOG_FILE, "utf-8")
     return JSON.parse(data) as PageViewRecord[]
-  } catch {
+  } catch (e) {
+    console.error("Failed to read analytics logs:", e)
     return []
   }
 }
 
 // Write log records safely
 function writeLogs(records: PageViewRecord[]) {
-  ensureLogFile()
-  fs.writeFileSync(LOG_FILE, JSON.stringify(records, null, 2))
+  try {
+    ensureLogFile()
+    fs.writeFileSync(LOG_FILE, JSON.stringify(records, null, 2))
+  } catch (e) {
+    console.error("Failed to write analytics logs:", e)
+  }
 }
 
 // Track page hits
