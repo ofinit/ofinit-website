@@ -1,24 +1,25 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { FileText, Eye, Edit, Plus, Briefcase } from "lucide-react"
+import { Plus } from "lucide-react"
 import { getAllCaseStudies } from "@/app/actions/case-study-actions"
 import { listBlogPostsForAdmin } from "@/app/actions/blog-actions"
+import { getHistoricalAnalytics, getRealtimeAnalytics } from "@/lib/analytics/tracker"
+import { AnalyticsCharts } from "@/components/admin/analytics-charts"
 
 export default async function AdminDashboard() {
   const blogPosts = await listBlogPostsForAdmin()
-  const publishedPosts = blogPosts.filter((post) => post.status === "published")
-  const draftPosts = blogPosts.filter((post) => post.status === "draft")
-
   const caseStudies = await getAllCaseStudies()
-  const publishedCaseStudies = caseStudies.filter((study) => study.published)
+  
+  // Fetch real-time active users and 30-day history metrics
+  const analyticsData = await getHistoricalAnalytics(30)
+  const activeUsers = getRealtimeAnalytics()
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage your blog content and portfolio</p>
+          <p className="text-gray-600 mt-2">Manage your blog content, SEO metrics, and portfolio statistics.</p>
         </div>
 
         <div className="flex gap-2">
@@ -37,56 +38,8 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <FileText className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Posts</p>
-              <p className="text-2xl font-bold text-gray-900">{blogPosts.length}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Eye className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Published</p>
-              <p className="text-2xl font-bold text-gray-900">{publishedPosts.length}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Edit className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Drafts</p>
-              <p className="text-2xl font-bold text-gray-900">{draftPosts.length}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Briefcase className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Case Studies</p>
-              <p className="text-2xl font-bold text-gray-900">{publishedCaseStudies.length}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Recharts Analytics Panel */}
+      <AnalyticsCharts data={analyticsData} activeUsers={activeUsers} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Posts */}

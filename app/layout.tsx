@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { SiteToaster } from "@/components/site-toaster"
+import { AnalyticsTracker } from "@/components/public/analytics-tracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={`${inter.className} font-sans antialiased`}>
         {children}
         <SiteToaster />
+        <AnalyticsTracker />
       </body>
     </html>
   )
