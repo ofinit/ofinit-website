@@ -17,7 +17,7 @@ export async function generateSitemaps() {
   return sitemaps
 }
 
-export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap({ id = 0 }: { id?: number } = {}): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date()
   const slugs = getAllLocationSlugs()
   const servicesList = ["ui-ux-design", "web-development", "software-development", "mobile-app-development", "ai-integration", "devops-services"]
