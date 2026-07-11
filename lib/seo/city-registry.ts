@@ -109,8 +109,17 @@ export function getGlobalCityRegistry(): CompactLocation[] {
 
   const registry: CompactLocation[] = []
 
-  // 1. Load Real Indian Cities (~700 entries)
+  // 1. Load Real Indian Cities (~700 entries) and their States
   for (const [state, cities] of Object.entries(INDIA_STATES_DATA)) {
+    // Add the state itself as a servable location record
+    registry.push({
+      name: state,
+      parent: "India",
+      country: "India",
+      lat: COORDINATE_FALLBACKS["India"].lat + (Math.sin(registry.length) * 2),
+      lng: COORDINATE_FALLBACKS["India"].lng + (Math.cos(registry.length) * 2),
+    })
+
     for (const city of cities) {
       registry.push({
         name: city,
