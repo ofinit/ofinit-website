@@ -35,12 +35,12 @@ export default async function RootLayout({
         <link
           rel="icon"
           type="image/svg+xml"
-          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3E.t%7Bfont-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:900%7D.b%7Bfill:%232563eb%7D.c%7Bfill:%230f172a%7D@media(prefers-color-scheme:dark)%7B.c%7Bfill:%23ffffff%7D%7D%3C/style%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' class='t'%3E%3Ctspan class='b'%3E%26lt%3B%3C/tspan%3E%3Ctspan class='c'%3EO%3C/tspan%3E%3Ctspan class='b'%3E/%26gt%3B%3C/tspan%3E%3C/text%3E%3C/svg%3E"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3E.t%7Bfont-family:system-ui,-apple-system,sans-serif;font-size:13px;font-weight:900;letter-spacing:-0.5px%7D.b%7Bfill:%232563eb%7D.c%7Bfill:%230f172a%7D@media(prefers-color-scheme:dark)%7B.c%7Bfill:%23ffffff%7D%7D%3C/style%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' class='t'%3E%3Ctspan class='b'%3E%26lt%3B%3C/tspan%3E%3Ctspan class='c'%3EO%3C/tspan%3E%3Ctspan class='b'%3E/%26gt%3B%3C/tspan%3E%3C/text%3E%3C/svg%3E"
         />
         <link
           rel="shortcut icon"
           type="image/svg+xml"
-          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3E.t%7Bfont-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:900%7D.b%7Bfill:%232563eb%7D.c%7Bfill:%230f172a%7D@media(prefers-color-scheme:dark)%7B.c%7Bfill:%23ffffff%7D%7D%3C/style%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' class='t'%3E%3Ctspan class='b'%3E%26lt%3B%3C/tspan%3E%3Ctspan class='c'%3EO%3C/tspan%3E%3Ctspan class='b'%3E/%26gt%3B%3C/tspan%3E%3C/text%3E%3C/svg%3E"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cstyle%3E.t%7Bfont-family:system-ui,-apple-system,sans-serif;font-size:13px;font-weight:900;letter-spacing:-0.5px%7D.b%7Bfill:%232563eb%7D.c%7Bfill:%230f172a%7D@media(prefers-color-scheme:dark)%7B.c%7Bfill:%23ffffff%7D%7D%3C/style%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' class='t'%3E%3Ctspan class='b'%3E%26lt%3B%3C/tspan%3E%3Ctspan class='c'%3EO%3C/tspan%3E%3Ctspan class='b'%3E/%26gt%3B%3C/tspan%3E%3C/text%3E%3C/svg%3E"
         />
         {googleSearchConsole && (
           <meta name="google-site-verification" content={googleSearchConsole} />
