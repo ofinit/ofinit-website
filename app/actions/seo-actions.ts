@@ -4,9 +4,9 @@ import { prisma } from "@/lib/db/prisma"
 import { assertAdminAuthenticated } from "@/lib/auth/admin-session"
 import { revalidatePath } from "next/cache"
 
-export const SEO_SETTINGS_KEY = "seo_settings"
+const SEO_SETTINGS_KEY = "seo_settings"
 
-export type SeoSettingsStored = {
+type SeoSettingsStored = {
   metaTitle: string
   metaDescription: string
   metaKeywords: string
