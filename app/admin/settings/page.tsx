@@ -17,6 +17,7 @@ import { getIndiaStateNameByCode, INDIA_GST_STATES } from "@/lib/gst/country-sta
 import { changeAdminEmail, changeAdminPassword, getAdminAccountInfo } from "@/app/actions/admin-actions"
 import { loadSupplierProfileFromDb, saveSupplierProfileToDb } from "@/app/actions/gst-actions"
 import { getPublicContactSettings, savePublicContactSettings } from "@/app/actions/site-content-actions"
+import { getSeoSettings, saveSeoSettings } from "@/app/actions/seo-actions"
 import Link from "next/link"
 
 export default function SettingsPage() {
@@ -114,6 +115,12 @@ export default function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoadingGeneral(false))
+
+    getSeoSettings()
+      .then((seo) => {
+        if (seo) setSeoSettings(seo)
+      })
+      .catch(() => {})
   }, [])
 
   const supplierStateLabel = useMemo(() => {
@@ -178,8 +185,12 @@ export default function SettingsPage() {
 
   const handleSaveSEO = async () => {
     setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const result = await saveSeoSettings(seoSettings)
     setSaving(false)
+    if (!result.ok) {
+      alert(result.error || "Failed to save SEO settings.")
+      return
+    }
     alert("SEO settings saved successfully!")
   }
 
