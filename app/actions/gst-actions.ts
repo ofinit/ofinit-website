@@ -97,6 +97,41 @@ export async function loadGstWorkspace(): Promise<GstWorkspaceLoadResult> {
       }
     }
 
+    // Migration: Fix missing invoice sequence INV/2026-27/0008 by shifting 0009 -> 0008 and 0010 -> 0009
+    const has0008 = invoices.some((inv) => inv.invoiceNo === "INV/2026-27/0008")
+    const index0009 = invoices.findIndex((inv) => inv.invoiceNo === "INV/2026-27/0009")
+    const index0010 = invoices.findIndex((inv) => inv.invoiceNo === "INV/2026-27/0010")
+
+    if (!has0008 && index0009 !== -1) {
+      // 0009 -> 0008
+      const inv0009 = invoices[index0009]
+      const updated0009: GstInvoice = {
+        ...inv0009,
+        invoiceNo: "INV/2026-27/0008",
+        updatedAt: new Date().toISOString(),
+      }
+      await prisma.gstInvoiceRecord.update({
+        where: { id: inv0009.id },
+        data: { payload: JSON.parse(JSON.stringify(updated0009)) },
+      })
+      invoices = invoices.map((inv, idx) => idx === index0009 ? updated0009 : inv)
+
+      // 0010 -> 0009 (if exists)
+      if (index0010 !== -1) {
+        const inv0010 = invoices[index0010]
+        const updated0010: GstInvoice = {
+          ...inv0010,
+          invoiceNo: "INV/2026-27/0009",
+          updatedAt: new Date().toISOString(),
+        }
+        await prisma.gstInvoiceRecord.update({
+          where: { id: inv0010.id },
+          data: { payload: JSON.parse(JSON.stringify(updated0010)) },
+        })
+        invoices = invoices.map((inv, idx) => idx === index0010 ? updated0010 : inv)
+      }
+    }
+
     const buyers = Array.isArray(buyersRaw) ? (buyersRaw as GstParty[]) : []
     const hsnList = Array.isArray(hsnRaw) ? (hsnRaw as string[]) : []
     const supplier =

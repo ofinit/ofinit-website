@@ -686,7 +686,17 @@ export default function AdminInvoicesPage() {
     setActiveTab("create")
   }
 
-  async function removeFromHistory(id: string) {
+  async function removeFromHistory(id: string, invoiceNo: string) {
+    const confirmFirst = window.confirm(`Are you sure you want to delete invoice ${invoiceNo}?`)
+    if (!confirmFirst) return
+
+    const typedText = window.prompt(`To confirm deletion, please type the invoice number "${invoiceNo}":`)
+    if (typedText === null) return
+    if (typedText.trim() !== invoiceNo) {
+      alert("Incorrect invoice number typed. Deletion canceled.")
+      return
+    }
+
     try {
       await deleteGstInvoice(id)
       await refreshWorkspace()
@@ -1226,7 +1236,7 @@ export default function AdminInvoicesPage() {
                                 variant="outline"
                                 className="bg-transparent text-red-600 hover:text-red-700"
                                 size="sm"
-                                onClick={() => removeFromHistory(inv.id)}
+                                onClick={() => removeFromHistory(inv.id, inv.invoiceNo)}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
