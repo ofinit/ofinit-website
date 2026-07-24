@@ -32,10 +32,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Load custom database overrides if configured
-  const customSettingsRecord = await prisma.siteSetting.findUnique({
-    where: { key: "location_custom_seo_settings" }
-  })
-  const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+  let overrides: Record<string, any> = {}
+  try {
+    const customSettingsRecord = await prisma.siteSetting.findUnique({
+      where: { key: "location_custom_seo_settings" }
+    })
+    overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+  } catch (err) {
+    console.warn(`[locations] generateMetadata database override fetch failed for ${slug}:`, err)
+  }
   const custom = overrides[`/locations/${slug}`]
   if (custom) {
     if (custom.title) loc.title = custom.title
@@ -67,15 +72,20 @@ export default async function LocationPage({ params }: Props) {
   }
 
   // Load custom database overrides if configured
-  const customSettingsRecord = await prisma.siteSetting.findUnique({
-    where: { key: "location_custom_seo_settings" }
-  })
-  const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
-  const custom = overrides[`/locations/${slug}`]
-  if (custom) {
-    if (custom.title) loc.title = custom.title
-    if (custom.description) loc.description = custom.description
-    if (custom.keywords) loc.keywords = custom.keywords
+  let pageOverrides: Record<string, any> = {}
+  try {
+    const customSettingsRecord = await prisma.siteSetting.findUnique({
+      where: { key: "location_custom_seo_settings" }
+    })
+    pageOverrides = (customSettingsRecord?.value as Record<string, any>) || {}
+  } catch (err) {
+    console.warn(`[locations] LocationPage database override fetch failed for ${slug}:`, err)
+  }
+  const pageCustom = pageOverrides[`/locations/${slug}`]
+  if (pageCustom) {
+    if (pageCustom.title) loc.title = pageCustom.title
+    if (pageCustom.description) loc.description = pageCustom.description
+    if (pageCustom.keywords) loc.keywords = pageCustom.keywords
   }
 
   const site = await loadPublicSiteContent()

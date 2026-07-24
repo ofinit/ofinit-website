@@ -367,10 +367,15 @@ export async function getSeoPagesList(): Promise<SeoPageReport[]> {
     }
 
     // Load custom SEO overrides for locations
-    const customSettingsRecord = await prisma.siteSetting.findUnique({
-      where: { key: "location_custom_seo_settings" }
-    })
-    const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+    let overrides: Record<string, any> = {}
+    try {
+      const customSettingsRecord = await prisma.siteSetting.findUnique({
+        where: { key: "location_custom_seo_settings" }
+      })
+      overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+    } catch (err) {
+      console.warn("[getSeoPagesList] Database error loading overrides, returning empty:", err)
+    }
 
     // 5. Fetch representative locations (STATIC_OVERWRITES)
     for (const loc of STATIC_OVERWRITES.slice(0, 8)) {
