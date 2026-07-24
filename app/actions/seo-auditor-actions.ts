@@ -786,7 +786,9 @@ Current Meta Description: ${pageDescription}
 Current Keywords: ${pageKeywords.join(", ")}
 Content Preview (body): ${pageContent.substring(0, 1500)}
 
-IMPORTANT: The current year is ${currentYear}. If the current metadata, URL, or content references past years (such as 2024 or 2025) in the context of guides, yearly predictions, or best practices, you MUST upgrade these year references in your optimized suggestions to the current year (${currentYear}) so that the page remains highly relevant and attractive for search results.
+IMPORTANT - Year Consistency Rule: 
+- Check the page URL/slug. If the URL/slug contains a specific year (e.g., "2024" in /blog/...-2024), you MUST preserve and use that exact year (e.g., 2024) in the optimized meta title and description to maintain path consistency and avoid URL-to-metadata mismatches.
+- If the page URL/slug does NOT specify a year, but the page content refers to generic yearly best practices (such as 2024 or 2025), you may update/upgrade those references to the current year (${currentYear}) to keep the metadata fresh.
 
 Optimize the page's metadata for search engines and user CTR. Fix length constraints (Titles should be 50-65 chars; Descriptions should be 120-160 chars). Return target keywords relevant to the content body.
 
