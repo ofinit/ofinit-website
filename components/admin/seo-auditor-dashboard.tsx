@@ -983,7 +983,7 @@ export function SeoAuditorDashboard({
                 </div>
               </div>
 
-              <DialogFooter className="gap-2 sm:gap-0">
+              <DialogFooter className="gap-2 sm:gap-2">
                 {selectedPage.type !== "Location" && (
                   <Button
                     size="sm"
@@ -1123,7 +1123,7 @@ export function SeoAuditorDashboard({
 
               </div>
 
-              <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
+              <DialogFooter className="gap-2 sm:gap-2 pt-2 border-t">
                 <Button
                   size="sm"
                   className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
