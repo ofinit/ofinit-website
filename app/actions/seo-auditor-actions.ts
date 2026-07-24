@@ -832,6 +832,10 @@ IMPORTANT - Year Consistency Rule:
 
 Optimize the page's metadata for search engines and user CTR. Fix length constraints (Titles should be 50-65 chars; Descriptions should be 120-160 chars). Return target keywords relevant to the content body.
 
+CRITICAL - Keyword Integration Rule:
+- You MUST naturally integrate at least one of your primary target keywords (from the optimized keywords list) directly inside the generated "optimizedTitle".
+- You MUST also naturally integrate at least one of those primary target keywords directly inside the generated "optimizedDescription". This is essential for search crawlers to map search queries to your page.
+
 Provide your response as a valid JSON object only. Do NOT wrap it in markdown code blocks or add any comments.
 JSON format:
 {
