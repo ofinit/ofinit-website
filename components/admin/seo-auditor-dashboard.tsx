@@ -29,15 +29,17 @@ import { toast } from "sonner"
 interface SeoAuditorDashboardProps {
   initialPages: SeoPageReport[]
   initialRankings: GscKeywordRank[]
-  initialGscConfig: { hasCredentials: boolean; propertyUrl: string }
+  initialGscConfig: { hasCredentials: boolean; propertyUrl: string; clientEmail?: string }
   initialConnected: boolean
+  initialError?: string
 }
 
 export function SeoAuditorDashboard({
   initialPages,
   initialRankings,
   initialGscConfig,
-  initialConnected
+  initialConnected,
+  initialError
 }: SeoAuditorDashboardProps) {
   const [activeTab, setActiveTab] = useState<"audit" | "rankings" | "setup">("audit")
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,6 +47,7 @@ export function SeoAuditorDashboard({
   const [rankings, setRankings] = useState<GscKeywordRank[]>(initialRankings)
   const [gscConfig, setGscConfig] = useState(initialGscConfig)
   const [connected, setConnected] = useState(initialConnected)
+  const [error, setError] = useState<string | undefined>(initialError)
   
   const [jsonKey, setJsonKey] = useState("")
   const [propertyUrl, setPropertyUrl] = useState(initialGscConfig.propertyUrl)
@@ -163,6 +166,11 @@ export function SeoAuditorDashboard({
             <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 flex items-center gap-1.5 hover:bg-emerald-100 rounded-md">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               GSC Live Connected
+            </Badge>
+          ) : gscConfig.hasCredentials ? (
+            <Badge className="bg-red-100 text-red-800 border border-red-200 px-3 py-1 flex items-center gap-1.5 hover:bg-red-100 rounded-md">
+              <ShieldAlert className="w-4 h-4 text-red-600 animate-pulse" />
+              Connection Failed
             </Badge>
           ) : (
             <Badge className="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 flex items-center gap-1.5 hover:bg-amber-100 rounded-md">
@@ -511,6 +519,11 @@ export function SeoAuditorDashboard({
                       <p className="text-sm font-semibold text-emerald-950 mt-1 font-mono break-all">
                         {gscConfig.propertyUrl}
                       </p>
+                      {gscConfig.clientEmail && (
+                        <p className="text-xs text-emerald-800 mt-1">
+                          Connected via: <code className="bg-emerald-100 px-1 rounded">{gscConfig.clientEmail}</code>
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -526,44 +539,89 @@ export function SeoAuditorDashboard({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="propertyUrl">Search Console Property URL</Label>
-                    <Input
-                      id="propertyUrl"
-                      placeholder="https://ofinit.com"
-                      value={propertyUrl}
-                      onChange={(e) => setPropertyUrl(e.target.value)}
-                      className="mt-2"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Must match the site prefix URL (e.g. <code>https://ofinit.com</code>) or the domain property set in Google Search Console.
-                    </p>
-                  </div>
+                <div className="space-y-6">
+                  {gscConfig.hasCredentials && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-red-100 rounded-full text-red-600">
+                          <ShieldAlert className="w-6 h-6 animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-red-950 text-base">GSC Connection Failed</h3>
+                          <p className="text-sm text-red-800">
+                            Credentials are saved for: <code className="bg-red-100 px-1 py-0.5 rounded font-bold text-red-950">{gscConfig.clientEmail}</code> but the API connection failed.
+                          </p>
+                          {error && (
+                            <div className="text-xs font-mono bg-red-100/50 text-red-900 p-3 border border-red-200 rounded mt-3 whitespace-pre-wrap max-h-36 overflow-y-auto">
+                              {error}
+                            </div>
+                          )}
+                          <p className="text-xs text-red-700 mt-3 pt-1">
+                            <strong>Troubleshooting:</strong> Please ensure that this service account email has been added with <strong>Viewer</strong> (or Owner/Full) permission to the property <code>{propertyUrl}</code> inside the official Google Search Console dashboard.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end pt-2">
+                        <Button
+                          variant="outline"
+                          className="border-red-200 text-red-700 hover:bg-red-100 bg-transparent flex items-center gap-1.5 text-xs h-8"
+                          onClick={handleDisconnect}
+                          disabled={isPending}
+                        >
+                          Clear Stored Credentials
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
-                  <div>
-                    <Label htmlFor="jsonKey">Google Service Account JSON Key</Label>
-                    <Textarea
-                      id="jsonKey"
-                      placeholder='{ "type": "service_account", "project_id": "...", "private_key_id": "...", "private_key": "...", "client_email": "...", ... }'
-                      value={jsonKey}
-                      onChange={(e) => setJsonKey(e.target.value)}
-                      rows={8}
-                      className="font-mono text-xs mt-2"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Paste the entire contents of the Service Account credentials key file you downloaded from Google Cloud.
-                    </p>
-                  </div>
+                  <div className="space-y-4 pt-2">
+                    <h3 className="text-sm font-semibold text-gray-800">
+                      {gscConfig.hasCredentials ? "Update / Overwrite Stored Key" : "Connection Credentials Setup"}
+                    </h3>
+                    
+                    <div>
+                      <Label htmlFor="propertyUrl">Search Console Property URL</Label>
+                      <Input
+                        id="propertyUrl"
+                        placeholder="https://ofinit.com"
+                        value={propertyUrl}
+                        onChange={(e) => setPropertyUrl(e.target.value)}
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Must match the site prefix URL (e.g. <code>https://ofinit.com</code>) or the domain property set in Google Search Console.
+                      </p>
+                    </div>
 
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      onClick={handleSaveConfig}
-                      disabled={isPending}
-                      className="flex items-center gap-1.5"
-                    >
-                      {isPending ? "Connecting..." : "Connect Search Console"}
-                    </Button>
+                    <div>
+                      <Label htmlFor="jsonKey">Google Service Account JSON Key</Label>
+                      <Textarea
+                        id="jsonKey"
+                        placeholder={
+                          gscConfig.hasCredentials
+                            ? `Credentials are already saved for ${gscConfig.clientEmail}. Paste a new JSON key here to overwrite it.`
+                            : '{ "type": "service_account", "project_id": "...", "private_key_id": "...", "private_key": "...", "client_email": "...", ... }'
+                        }
+                        value={jsonKey}
+                        onChange={(e) => setJsonKey(e.target.value)}
+                        rows={6}
+                        className="font-mono text-xs mt-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Paste the entire contents of the Service Account credentials key file you downloaded from Google Cloud.
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        onClick={handleSaveConfig}
+                        disabled={isPending}
+                        className="flex items-center gap-1.5 text-xs"
+                      >
+                        {isPending ? "Connecting..." : gscConfig.hasCredentials ? "Update Credentials" : "Connect Search Console"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

@@ -16,6 +16,7 @@ export default async function AdminSeoAuditorPage() {
       initialRankings={rankingsResult.rankings}
       initialGscConfig={gscConfig}
       initialConnected={rankingsResult.connected}
+      initialError={rankingsResult.error}
     />
   )
 }

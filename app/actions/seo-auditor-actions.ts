@@ -388,14 +388,27 @@ export async function getSeoPagesList(): Promise<SeoPageReport[]> {
 }
 
 // Credentials management actions
-export async function getGoogleGscConfig(): Promise<{ hasCredentials: boolean; propertyUrl: string }> {
+export async function getGoogleGscConfig(): Promise<{
+  hasCredentials: boolean
+  propertyUrl: string
+  clientEmail?: string
+}> {
   try {
     const creds = await prisma.siteSetting.findUnique({ where: { key: GSC_CREDENTIALS_KEY } })
     const prop = await prisma.siteSetting.findUnique({ where: { key: GSC_PROPERTY_KEY } })
     
+    let clientEmail: string | undefined
+    if (creds?.value && typeof creds.value === "string") {
+      try {
+        const parsed = JSON.parse(creds.value)
+        clientEmail = parsed.client_email
+      } catch {}
+    }
+    
     return {
       hasCredentials: !!creds?.value,
-      propertyUrl: (prop?.value as string) || "https://ofinit.com"
+      propertyUrl: (prop?.value as string) || "https://ofinit.com",
+      clientEmail
     }
   } catch {
     return { hasCredentials: false, propertyUrl: "https://ofinit.com" }
