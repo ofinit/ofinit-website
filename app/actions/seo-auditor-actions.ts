@@ -775,6 +775,8 @@ export async function generateAiSeoFix(
       return { ok: false, error: "Dynamic template landing pages must be customized in code config." }
     }
 
+    const currentYear = new Date().getFullYear() // Dynamically retrieve current year (e.g. 2026)
+
     // Construct the prompt to optimize metadata using Gemini
     const prompt = `You are an expert SEO copywriter. Review the following metadata and content for a website page:
 URL: ${url}
@@ -783,6 +785,8 @@ Current Meta Title: ${pageTitle}
 Current Meta Description: ${pageDescription}
 Current Keywords: ${pageKeywords.join(", ")}
 Content Preview (body): ${pageContent.substring(0, 1500)}
+
+IMPORTANT: The current year is ${currentYear}. If the current metadata, URL, or content references past years (such as 2024 or 2025) in the context of guides, yearly predictions, or best practices, you MUST upgrade these year references in your optimized suggestions to the current year (${currentYear}) so that the page remains highly relevant and attractive for search results.
 
 Optimize the page's metadata for search engines and user CTR. Fix length constraints (Titles should be 50-65 chars; Descriptions should be 120-160 chars). Return target keywords relevant to the content body.
 
