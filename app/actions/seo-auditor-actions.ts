@@ -795,31 +795,62 @@ JSON format:
   "aiExplanation": "A 2-sentence explanation of what was fixed and why this metadata is better."
 }`
 
-    // Call Gemini API using native fetch
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-    const response = await fetch(geminiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    })
+    // Call Gemini API using native fetch with robust fallback across active models and API versions
+    const modelsToTry = [
+      "gemini-3.5-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-1.5-flash"
+    ]
+    const versionsToTry = ["v1", "v1beta"]
+    
+    let lastError = ""
+    let suggestions: any = null
 
-    if (!response.ok) {
-      const err = await response.text()
-      return { ok: false, error: `Gemini API query failed: ${response.status} - ${err}` }
+    for (const model of modelsToTry) {
+      for (const version of versionsToTry) {
+        try {
+          const geminiUrl = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`
+          console.log(`[generateAiSeoFix] Attempting query on Gemini API using ${version}/${model}`)
+          
+          const response = await fetch(geminiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }]
+            })
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+            if (content) {
+              const cleaned = cleanJsonString(content)
+              suggestions = JSON.parse(cleaned)
+              console.log(`[generateAiSeoFix] Success! Used model ${model} via API version ${version}`)
+              break
+            }
+          } else {
+            const errText = await response.text()
+            lastError = `${version}/${model} call failed: ${response.status} - ${errText}`
+            console.warn(`[generateAiSeoFix] ${lastError}`)
+          }
+        } catch (err: any) {
+          lastError = `${version}/${model} fetch exception: ${err.message || err}`
+          console.warn(`[generateAiSeoFix] ${lastError}`)
+        }
+      }
+      if (suggestions) break
     }
 
-    const data = await response.json()
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!content) {
-      return { ok: false, error: "No response received from Gemini API." }
+    if (!suggestions) {
+      return { 
+        ok: false, 
+        error: `Gemini API query failed for all attempts. Last error: ${lastError}` 
+      }
     }
-
-    const cleaned = cleanJsonString(content)
-    const suggestions = JSON.parse(cleaned)
 
     return {
       ok: true,
