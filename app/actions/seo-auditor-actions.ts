@@ -876,12 +876,18 @@ export async function applyAiSeoFix(
   type: string,
   title: string,
   description: string,
-  keywords: string[]
+  keywords: string[],
+  bypassAuthToken?: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  try {
-    await assertAdminAuthenticated()
-  } catch {
-    return { ok: false, error: "Authentication failed. Please log in again." }
+  const cronSecret = process.env.CRON_SECRET
+  const isBypassed = cronSecret && bypassAuthToken === cronSecret
+
+  if (!isBypassed) {
+    try {
+      await assertAdminAuthenticated()
+    } catch {
+      return { ok: false, error: "Authentication failed. Please log in again." }
+    }
   }
 
   try {
