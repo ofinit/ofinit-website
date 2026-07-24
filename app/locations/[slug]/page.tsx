@@ -10,6 +10,7 @@ import { getServiceIcon } from "@/lib/site-content/icons"
 import { serviceSlugFromName } from "@/lib/services/slug"
 import { getLocationSEO, getAllLocationSlugs } from "@/lib/seo/locations-data"
 import { MapPin, Shield, CheckCircle2, ChevronRight } from "lucide-react"
+import { prisma } from "@/lib/db/prisma"
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -28,6 +29,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "Location Not Found",
     }
+  }
+
+  // Load custom database overrides if configured
+  const customSettingsRecord = await prisma.siteSetting.findUnique({
+    where: { key: "location_custom_seo_settings" }
+  })
+  const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+  const custom = overrides[`/locations/${slug}`]
+  if (custom) {
+    if (custom.title) loc.title = custom.title
+    if (custom.description) loc.description = custom.description
+    if (custom.keywords) loc.keywords = custom.keywords
   }
 
   return {
@@ -51,6 +64,18 @@ export default async function LocationPage({ params }: Props) {
   const loc = getLocationSEO(slug)
   if (!loc) {
     notFound()
+  }
+
+  // Load custom database overrides if configured
+  const customSettingsRecord = await prisma.siteSetting.findUnique({
+    where: { key: "location_custom_seo_settings" }
+  })
+  const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+  const custom = overrides[`/locations/${slug}`]
+  if (custom) {
+    if (custom.title) loc.title = custom.title
+    if (custom.description) loc.description = custom.description
+    if (custom.keywords) loc.keywords = custom.keywords
   }
 
   const site = await loadPublicSiteContent()

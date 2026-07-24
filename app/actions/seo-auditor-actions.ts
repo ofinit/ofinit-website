@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { assertAdminAuthenticated } from "@/lib/auth/admin-session"
 import { getSeoSettings } from "./seo-actions"
-import { STATIC_OVERWRITES } from "@/lib/seo/locations-data"
+import { STATIC_OVERWRITES, getLocationSEO } from "@/lib/seo/locations-data"
 import crypto from "crypto"
 
 const GSC_CREDENTIALS_KEY = "seo_google_gsc_credentials"
@@ -366,15 +366,33 @@ export async function getSeoPagesList(): Promise<SeoPageReport[]> {
       )
     }
 
+    // Load custom SEO overrides for locations
+    const customSettingsRecord = await prisma.siteSetting.findUnique({
+      where: { key: "location_custom_seo_settings" }
+    })
+    const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+
     // 5. Fetch representative locations (STATIC_OVERWRITES)
     for (const loc of STATIC_OVERWRITES.slice(0, 8)) {
+      const url = `/locations/${loc.slug}`
+      const locSEO = getLocationSEO(loc.slug)
+      
+      const defaultTitle = locSEO?.title || `${loc.name} Web Development Services`
+      const defaultDesc = locSEO?.description || `OfinIT is a premier custom software and Next.js web development agency servicing businesses in ${loc.name}.`
+      const defaultKeywords = locSEO?.keywords || ["web development " + loc.name, "software company " + loc.name]
+      
+      const custom = overrides[url] || {}
+      const title = custom.title || defaultTitle
+      const description = custom.description || defaultDesc
+      const keywords = custom.keywords || defaultKeywords
+
       reports.push(
         auditPage(
-          `/locations/${loc.slug}`,
+          url,
           "Location",
-          loc.name + " Web Development Services",
-          `OfinIT is a premier custom software and Next.js web development agency servicing businesses in ${loc.name}.`,
-          ["web development " + loc.name, "software company " + loc.name],
+          title,
+          description,
+          keywords,
           `We provide standard UI/UX design, custom software engineering, mobile application building, and AI integration for companies in ${loc.name}. Our developers focus on creating super fast Core Web Vitals optimized sites.`,
           true
         )
@@ -771,6 +789,23 @@ export async function generateAiSeoFix(
       pageTitle = page.title
       pageDescription = `OfinIT page detailing terms, privacy, or company rules for ${page.title}`
       pageContent = page.bodyMd
+    } else if (type === "Location") {
+      const slug = url.replace("/locations/", "")
+      const loc = STATIC_OVERWRITES.find(l => l.slug === slug)
+      if (!loc) return { ok: false, error: `Location config not found for slug: ${slug}` }
+      
+      const locSEO = getLocationSEO(slug)
+      
+      const customSettingsRecord = await prisma.siteSetting.findUnique({
+        where: { key: "location_custom_seo_settings" }
+      })
+      const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+      const custom = overrides[url] || {}
+
+      pageTitle = custom.title || locSEO?.title || `${loc.name} Web Development Services`
+      pageDescription = custom.description || locSEO?.description || ""
+      pageKeywords = custom.keywords || locSEO?.keywords || []
+      pageContent = `We provide standard UI/UX design, custom software engineering, mobile application building, and AI integration for companies in ${loc.name}. Our developers focus on creating super fast Core Web Vitals optimized sites.`
     } else {
       return { ok: false, error: "Dynamic template landing pages must be customized in code config." }
     }
@@ -940,6 +975,28 @@ export async function applyAiSeoFix(
         where: { slug },
         data: {
           title: title
+        }
+      })
+    } else if (type === "Location") {
+      const customSettingsRecord = await prisma.siteSetting.findUnique({
+        where: { key: "location_custom_seo_settings" }
+      })
+      const overrides = (customSettingsRecord?.value as Record<string, any>) || {}
+
+      overrides[url] = {
+        title,
+        description,
+        keywords
+      }
+
+      await prisma.siteSetting.upsert({
+        where: { key: "location_custom_seo_settings" },
+        create: {
+          key: "location_custom_seo_settings",
+          value: overrides
+        },
+        update: {
+          value: overrides
         }
       })
     } else {

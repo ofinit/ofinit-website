@@ -984,7 +984,6 @@ export function SeoAuditorDashboard({
               </div>
 
               <DialogFooter className="gap-2 sm:gap-2">
-                {selectedPage.type !== "Location" && (
                   <Button
                     size="sm"
                     className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5"
@@ -993,7 +992,6 @@ export function SeoAuditorDashboard({
                     <Brain className="w-4 h-4" />
                     Fix with AI
                   </Button>
-                )}
                 
                 <Link href={getEditUrl(selectedPage)}>
                   <Button size="sm" className="w-full sm:w-auto" onClick={() => setSelectedPage(null)}>
