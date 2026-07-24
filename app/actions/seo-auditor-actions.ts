@@ -658,3 +658,253 @@ function getSimulatedRankings(): GscKeywordRank[] {
     }
   })
 }
+
+const GEMINI_API_KEY_KEY = "seo_gemini_api_key"
+
+export async function getGeminiConfig(): Promise<{ hasGeminiKey: boolean }> {
+  try {
+    const creds = await prisma.siteSetting.findUnique({ where: { key: GEMINI_API_KEY_KEY } })
+    return { hasGeminiKey: !!creds?.value }
+  } catch {
+    return { hasGeminiKey: false }
+  }
+}
+
+export async function saveGeminiConfig(apiKey: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await assertAdminAuthenticated()
+  } catch {
+    return { ok: false, error: "Authentication failed. Log in again." }
+  }
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { key: GEMINI_API_KEY_KEY },
+      create: { key: GEMINI_API_KEY_KEY, value: apiKey.trim() },
+      update: { value: apiKey.trim() }
+    })
+    return { ok: true }
+  } catch (e) {
+    console.error("[saveGeminiConfig] Error:", e)
+    return { ok: false, error: "Failed to save Gemini API key." }
+  }
+}
+
+export async function disconnectGemini(): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await assertAdminAuthenticated()
+  } catch {
+    return { ok: false, error: "Authentication failed." }
+  }
+
+  try {
+    await prisma.siteSetting.deleteMany({
+      where: { key: GEMINI_API_KEY_KEY }
+    })
+    return { ok: true }
+  } catch (error) {
+    console.error("[disconnectGemini] Error:", error)
+    return { ok: false, error: "Failed to disconnect Gemini." }
+  }
+}
+
+function cleanJsonString(raw: string): string {
+  return raw
+    .replace(/^```json/i, "")
+    .replace(/^```/i, "")
+    .replace(/```$/, "")
+    .trim()
+}
+
+export async function generateAiSeoFix(
+  url: string,
+  type: string
+): Promise<{
+  ok: true
+  suggestions: {
+    optimizedTitle: string
+    optimizedDescription: string
+    optimizedKeywords: string[]
+    aiExplanation: string
+  }
+} | { ok: false; error: string }> {
+  try {
+    const creds = await prisma.siteSetting.findUnique({ where: { key: GEMINI_API_KEY_KEY } })
+    if (!creds?.value || typeof creds.value !== "string") {
+      return { ok: false, error: "api_key_missing" }
+    }
+    const apiKey = creds.value
+
+    // Load contextual page content based on URL and type
+    let pageTitle = ""
+    let pageDescription = ""
+    let pageKeywords: string[] = []
+    let pageContent = ""
+
+    if (type === "Home") {
+      const seo = await getSeoSettings()
+      pageTitle = seo.metaTitle
+      pageDescription = seo.metaDescription
+      pageKeywords = seo.metaKeywords ? seo.metaKeywords.split(",").map((k) => k.trim()) : []
+      pageContent = "OfinIT Solutions - Web, Software, AI Development, mobile apps, and cloud operations. Leading developer agency."
+    } else if (type === "Blog") {
+      const slug = url.replace("/blog/", "")
+      const post = await prisma.blogPost.findUnique({ where: { slug } })
+      if (!post) return { ok: false, error: `Blog post not found for slug: ${slug}` }
+      pageTitle = post.metaTitle || post.title
+      pageDescription = post.metaDescription || post.excerpt
+      pageKeywords = Array.isArray(post.metaKeywords) ? (post.metaKeywords as string[]) : []
+      pageContent = post.content
+    } else if (type === "Service") {
+      const slug = url.replace("/services/", "")
+      const svc = await prisma.service.findUnique({ where: { slug } })
+      if (!svc) return { ok: false, error: `Service not found for slug: ${slug}` }
+      pageTitle = `${svc.name} | OfinIT Services`
+      pageDescription = svc.shortDescription
+      pageKeywords = [svc.name, "OfinIT Services"]
+      pageContent = svc.bodyMd
+    } else if (type === "Legal") {
+      const slug = url.replace("/", "")
+      const page = await prisma.publicPage.findUnique({ where: { slug } })
+      if (!page) return { ok: false, error: `Legal page not found for slug: ${slug}` }
+      pageTitle = page.title
+      pageDescription = `OfinIT page detailing terms, privacy, or company rules for ${page.title}`
+      pageContent = page.bodyMd
+    } else {
+      return { ok: false, error: "Dynamic template landing pages must be customized in code config." }
+    }
+
+    // Construct the prompt to optimize metadata using Gemini
+    const prompt = `You are an expert SEO copywriter. Review the following metadata and content for a website page:
+URL: ${url}
+Type: ${type}
+Current Meta Title: ${pageTitle}
+Current Meta Description: ${pageDescription}
+Current Keywords: ${pageKeywords.join(", ")}
+Content Preview (body): ${pageContent.substring(0, 1500)}
+
+Optimize the page's metadata for search engines and user CTR. Fix length constraints (Titles should be 50-65 chars; Descriptions should be 120-160 chars). Return target keywords relevant to the content body.
+
+Provide your response as a valid JSON object only. Do NOT wrap it in markdown code blocks or add any comments.
+JSON format:
+{
+  "optimizedTitle": "Optimal SEO Title (50-65 characters)",
+  "optimizedDescription": "Compelling Meta Description (120-160 characters)",
+  "optimizedKeywords": ["keyword1", "keyword2", "keyword3"],
+  "aiExplanation": "A 2-sentence explanation of what was fixed and why this metadata is better."
+}`
+
+    // Call Gemini API using native fetch
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+    const response = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      return { ok: false, error: `Gemini API query failed: ${response.status} - ${err}` }
+    }
+
+    const data = await response.json()
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+    if (!content) {
+      return { ok: false, error: "No response received from Gemini API." }
+    }
+
+    const cleaned = cleanJsonString(content)
+    const suggestions = JSON.parse(cleaned)
+
+    return {
+      ok: true,
+      suggestions: {
+        optimizedTitle: suggestions.optimizedTitle || pageTitle,
+        optimizedDescription: suggestions.optimizedDescription || pageDescription,
+        optimizedKeywords: suggestions.optimizedKeywords || pageKeywords,
+        aiExplanation: suggestions.aiExplanation || "Optimized metadata generated by Gemini AI."
+      }
+    }
+  } catch (e: any) {
+    console.error("[generateAiSeoFix] Error generating fixes:", e)
+    return { ok: false, error: e?.message || "Internal error generating metadata fixes." }
+  }
+}
+
+export async function applyAiSeoFix(
+  url: string,
+  type: string,
+  title: string,
+  description: string,
+  keywords: string[]
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await assertAdminAuthenticated()
+  } catch {
+    return { ok: false, error: "Authentication failed. Please log in again." }
+  }
+
+  try {
+    if (type === "Home") {
+      const seo = await getSeoSettings()
+      await prisma.siteSetting.upsert({
+        where: { key: "seo_settings" },
+        create: {
+          key: "seo_settings",
+          value: {
+            ...seo,
+            metaTitle: title,
+            metaDescription: description,
+            metaKeywords: keywords.join(", ")
+          }
+        },
+        update: {
+          value: {
+            ...seo,
+            metaTitle: title,
+            metaDescription: description,
+            metaKeywords: keywords.join(", ")
+          }
+        }
+      })
+    } else if (type === "Blog") {
+      const slug = url.replace("/blog/", "")
+      await prisma.blogPost.update({
+        where: { slug },
+        data: {
+          metaTitle: title,
+          metaDescription: description,
+          metaKeywords: keywords
+        }
+      })
+    } else if (type === "Service") {
+      const slug = url.replace("/services/", "")
+      await prisma.service.update({
+        where: { slug },
+        data: {
+          name: title.replace(" | OfinIT Services", ""),
+          shortDescription: description
+        }
+      })
+    } else if (type === "Legal") {
+      const slug = url.replace("/", "")
+      await prisma.publicPage.update({
+        where: { slug },
+        data: {
+          title: title
+        }
+      })
+    } else {
+      return { ok: false, error: "Cannot apply optimizations to read-only template location paths." }
+    }
+
+    return { ok: true }
+  } catch (error: any) {
+    console.error("[applyAiSeoFix] DB Update failed:", error)
+    return { ok: false, error: error?.message || "Failed to save optimizations to database." }
+  }
+}

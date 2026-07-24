@@ -20,10 +20,19 @@ import {
   Sparkles, CheckCircle2, AlertCircle, HelpCircle, 
   Search, ShieldCheck, ShieldAlert, KeyRound, Globe, 
   ArrowUpDown, TrendingUp, RefreshCw, Pencil, ExternalLink,
-  ChevronRight, AlertTriangle
+  ChevronRight, AlertTriangle, Download, Brain, Loader2
 } from "lucide-react"
 import Link from "next/link"
-import { saveGoogleGscConfig, disconnectGoogleGsc, SeoPageReport, GscKeywordRank } from "@/app/actions/seo-auditor-actions"
+import { 
+  saveGoogleGscConfig, 
+  disconnectGoogleGsc, 
+  SeoPageReport, 
+  GscKeywordRank,
+  saveGeminiConfig,
+  disconnectGemini,
+  generateAiSeoFix,
+  applyAiSeoFix
+} from "@/app/actions/seo-auditor-actions"
 import { toast } from "sonner"
 
 interface SeoAuditorDashboardProps {
@@ -32,6 +41,7 @@ interface SeoAuditorDashboardProps {
   initialGscConfig: { hasCredentials: boolean; propertyUrl: string; clientEmail?: string }
   initialConnected: boolean
   initialError?: string
+  initialGeminiConfig: { hasGeminiKey: boolean }
 }
 
 export function SeoAuditorDashboard({
@@ -39,7 +49,8 @@ export function SeoAuditorDashboard({
   initialRankings,
   initialGscConfig,
   initialConnected,
-  initialError
+  initialError,
+  initialGeminiConfig
 }: SeoAuditorDashboardProps) {
   const [activeTab, setActiveTab] = useState<"audit" | "rankings" | "setup">("audit")
   const [searchQuery, setSearchQuery] = useState("")
@@ -48,6 +59,18 @@ export function SeoAuditorDashboard({
   const [gscConfig, setGscConfig] = useState(initialGscConfig)
   const [connected, setConnected] = useState(initialConnected)
   const [error, setError] = useState<string | undefined>(initialError)
+  
+  const [geminiConfig, setGeminiConfig] = useState(initialGeminiConfig)
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState("")
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [aiFixSuggestions, setAiFixSuggestions] = useState<{
+    optimizedTitle: string
+    optimizedDescription: string
+    optimizedKeywords: string[]
+    aiExplanation: string
+  } | null>(null)
+  const [isAiPending, setIsAiPending] = useState(false)
+  const [aiError, setAiError] = useState("")
   
   const [jsonKey, setJsonKey] = useState("")
   const [propertyUrl, setPropertyUrl] = useState(initialGscConfig.propertyUrl)
@@ -101,6 +124,147 @@ export function SeoAuditorDashboard({
         toast.error(res.error || "Failed to disconnect.")
       }
     })
+  }
+
+  const handleSaveGeminiKey = () => {
+    if (!geminiApiKeyInput.trim()) {
+      toast.error("Please enter a valid Gemini API Key.")
+      return
+    }
+
+    startTransition(async () => {
+      const res = await saveGeminiConfig(geminiApiKeyInput)
+      if (res.ok) {
+        toast.success("Gemini API Key saved successfully!")
+        setGeminiConfig({ hasGeminiKey: true })
+        setGeminiApiKeyInput("")
+      } else {
+        toast.error(res.error || "Failed to save Gemini Key.")
+      }
+    })
+  }
+
+  const handleDisconnectGemini = () => {
+    if (!confirm("Are you sure you want to disconnect the Gemini API key?")) return
+
+    startTransition(async () => {
+      const res = await disconnectGemini()
+      if (res.ok) {
+        toast.success("Gemini API key disconnected.")
+        setGeminiConfig({ hasGeminiKey: false })
+      } else {
+        toast.error(res.error || "Failed to disconnect Gemini.")
+      }
+    })
+  }
+
+  const handleExportMd = () => {
+    let md = `# OfinIT SEO Audit & Rankings Report\n`
+    md += `Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}\n\n`
+    
+    md += `## Executive Summary\n`
+    md += `- **Average SEO Score**: ${averageScore}%\n`
+    md += `- **Optimized Pages**: ${fullyOptimized} of ${pages.length}\n`
+    md += `- **Tracked Keyword Queries**: ${totalKeywords}\n`
+    md += `- **Average Google Search Rank**: #${avgPosition}\n`
+    md += `- **Google Search Console Status**: ${connected ? "Connected (Live data)" : "Simulated Mode"}\n\n`
+    
+    md += `## On-Page SEO Pages Index\n\n`
+    md += `| Page Path | Type | SEO Score | Word Count | H1 Count | Alt Tags | Target Keywords |\n`
+    md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`
+    pages.forEach(p => {
+      md += `| \`${p.url}\` | ${p.type} | **${p.seoScore}/100** | ${p.wordCount} | ${p.h1Count} | ${p.hasAltTags ? "Yes" : "Missing"} | ${p.keywords.join(", ") || "-"} |\n`
+    })
+    md += `\n`
+    
+    md += `## Keyword Rankings (Google Search Console)\n\n`
+    md += `| Keyword Query | Search Position | Clicks (30d) | Impressions | CTR | Mapped URL |\n`
+    md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`
+    rankings.forEach(r => {
+      md += `| **${r.keyword}** | #${r.position} | ${r.clicks} | ${r.impressions} | ${r.ctr}% | \`${r.pageUrl}\` |\n`
+    })
+    md += `\n`
+    
+    md += `## Detailed Page Audit Suggestion Checklists\n\n`
+    pages.forEach(p => {
+      md += `### URL: \`${p.url}\` (${p.type}) — Score: ${p.seoScore}/100\n`
+      md += `- **Meta Title**: "${p.title || ""}"\n`
+      md += `- **Meta Description**: "${p.description || ""}"\n`
+      md += `- **Word Count**: ${p.wordCount} words\n`
+      md += `- **Audits Checklist**:\n`
+      p.checklist.forEach(item => {
+        md += `  - [${item.passed ? "x" : " "}] **${item.label}** (${item.impact} impact): ${item.message}\n`
+      })
+      md += `\n`
+    })
+    
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", `ofinit-seo-audit-report.md`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success("AI-readable SEO report exported as .md successfully!")
+  }
+
+  const handleTriggerAiFix = (page: SeoPageReport) => {
+    if (!geminiConfig.hasGeminiKey) {
+      toast.error("Gemini API key is not configured. Go to 'Console & AI Settings' to connect.")
+      return
+    }
+
+    setAiError("")
+    setIsAiPending(true)
+    setIsAiModalOpen(true)
+    setAiFixSuggestions(null)
+
+    // Trigger Server Action to fetch optimized metadata
+    generateAiSeoFix(page.url, page.type)
+      .then((res) => {
+        if (res.ok) {
+          setAiFixSuggestions(res.suggestions)
+        } else {
+          setAiError(res.error || "Failed to query Gemini API suggestion.")
+        }
+      })
+      .catch((err) => {
+        setAiError(err.message || "An unexpected error occurred.")
+      })
+      .finally(() => {
+        setIsAiPending(false)
+      })
+  }
+
+  const handleApplyAiFix = (page: SeoPageReport) => {
+    if (!aiFixSuggestions) return
+
+    setIsAiPending(true)
+    applyAiSeoFix(
+      page.url,
+      page.type,
+      aiFixSuggestions.optimizedTitle,
+      aiFixSuggestions.optimizedDescription,
+      aiFixSuggestions.optimizedKeywords
+    )
+      .then((res) => {
+        if (res.ok) {
+          toast.success("Optimized metadata successfully applied and saved!")
+          setIsAiModalOpen(false)
+          setSelectedPage(null)
+          // Reload page to reflect newly updated metadata
+          window.location.reload()
+        } else {
+          toast.error(res.error || "Failed to save suggested changes.")
+        }
+      })
+      .catch((err) => {
+        toast.error(err.message || "Could not apply optimization.")
+      })
+      .finally(() => {
+        setIsAiPending(false)
+      })
   }
 
   // Filter & sort pages
@@ -178,6 +342,16 @@ export function SeoAuditorDashboard({
               Simulated Mode
             </Badge>
           )}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportMd}
+            className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export AI Report (.md)
+          </Button>
           
           <Button
             variant="outline"
@@ -295,7 +469,7 @@ export function SeoAuditorDashboard({
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/50"
           }`}
         >
-          Console Connection
+          Console & AI Settings
         </button>
       </div>
 
@@ -628,6 +802,74 @@ export function SeoAuditorDashboard({
             </CardContent>
           </Card>
 
+          {/* Gemini AI Assistant card */}
+          <Card className="lg:col-span-2 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <Brain className="w-5 h-5 text-indigo-600" />
+                Gemini AI Optimizer Integration
+              </CardTitle>
+              <CardDescription>
+                Provide a Gemini API Key to enable automated SEO metadata optimization suggestions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {geminiConfig.hasGeminiKey ? (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
+                      <Brain className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-indigo-900 text-base">Gemini AI Key Stored</h3>
+                      <p className="text-sm text-indigo-700 mt-1">
+                        Your Gemini API is configured. You can now use the **Fix with AI** button inside any page's audit card.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      variant="outline"
+                      className="border-indigo-200 text-indigo-700 hover:bg-indigo-100 bg-transparent flex items-center gap-1.5 text-xs h-8"
+                      onClick={handleDisconnectGemini}
+                      disabled={isPending}
+                    >
+                      Disconnect Gemini key
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="geminiApiKey">Gemini API Key</Label>
+                    <Input
+                      id="geminiApiKey"
+                      type="password"
+                      placeholder="AIzaSy..."
+                      value={geminiApiKeyInput}
+                      onChange={(e) => setGeminiApiKeyInput(e.target.value)}
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Create an API key in the Google AI Studio to unlock automated SEO fixes.
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      onClick={handleSaveGeminiKey}
+                      disabled={isPending}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      {isPending ? "Saving..." : "Save Gemini Key"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Quick guide card */}
           <Card className="shadow-sm bg-slate-50 border-slate-100 flex flex-col justify-between">
             <CardHeader>
@@ -742,18 +984,177 @@ export function SeoAuditorDashboard({
               </div>
 
               <DialogFooter className="gap-2 sm:gap-0">
+                {selectedPage.type !== "Location" && (
+                  <Button
+                    size="sm"
+                    className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5"
+                    onClick={() => handleTriggerAiFix(selectedPage)}
+                  >
+                    <Brain className="w-4 h-4" />
+                    Fix with AI
+                  </Button>
+                )}
+                
                 <Link href={getEditUrl(selectedPage)}>
                   <Button size="sm" className="w-full sm:w-auto" onClick={() => setSelectedPage(null)}>
                     <Pencil className="w-4 h-4 mr-1.5" />
                     Edit Content
                   </Button>
                 </Link>
+                
                 <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setSelectedPage(null)}>
                   Close Report
                 </Button>
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* AI SEO METADATA OPTIMIZER MODAL */}
+      <Dialog open={isAiModalOpen} onOpenChange={(open) => { if (!open) setIsAiModalOpen(false) }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <Brain className="w-6 h-6 text-indigo-600 animate-pulse" />
+              Gemini AI SEO Metadata Fixer
+            </DialogTitle>
+            <DialogDescription className="font-mono text-xs text-gray-500 break-all mt-1">
+              Optimizing URL: {selectedPage?.url}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isAiPending && !aiFixSuggestions ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+              <p className="text-sm font-semibold text-gray-600 animate-pulse">
+                Analyzing page content and optimizing metadata via Gemini AI...
+              </p>
+            </div>
+          ) : aiError ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 space-y-4 my-2">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-950 text-sm">AI Optimization Failed</h3>
+                  <p className="text-xs text-red-800 mt-1 whitespace-pre-wrap">
+                    {aiError === "api_key_missing" 
+                      ? "Your Gemini API Key is missing. Please add a valid API key in the 'Console & AI Settings' tab first." 
+                      : aiError}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" size="sm" onClick={() => setIsAiModalOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          ) : aiFixSuggestions ? (
+            <div className="space-y-6 my-2">
+              
+              {/* Explanation Box */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-sm text-indigo-950">
+                <div className="font-bold flex items-center gap-1.5 mb-1 text-indigo-900">
+                  <Sparkles className="w-4 h-4" />
+                  AI Optimization Rationale
+                </div>
+                <p className="text-xs text-indigo-800 leading-relaxed">
+                  {aiFixSuggestions.aiExplanation}
+                </p>
+              </div>
+
+              {/* Side-by-side comparison */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Current Cards */}
+                <Card className="border border-slate-100 bg-slate-50/50 shadow-none">
+                  <CardHeader className="py-3 px-4 border-b">
+                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-gray-500">Current Metadata</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3.5 text-xs">
+                    <div>
+                      <div className="font-bold text-gray-700">Meta Title</div>
+                      <div className="text-gray-900 font-medium mt-1 bg-white p-2 rounded border">{selectedPage?.title}</div>
+                      <span className="text-[10px] text-gray-400 mt-1 block">{(selectedPage?.title || "").length} characters</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-700">Meta Description</div>
+                      <div className="text-gray-900 font-medium mt-1 bg-white p-2 rounded border line-clamp-4">{selectedPage?.description || "-"}</div>
+                      <span className="text-[10px] text-gray-400 mt-1 block">{(selectedPage?.description || "").length} characters</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-700">Meta Keywords</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedPage?.keywords.map(k => (
+                          <Badge key={k} variant="outline" className="text-[10px]">{k}</Badge>
+                        )) || "-"}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* AI suggested card */}
+                <Card className="border border-emerald-100 bg-emerald-50/10 shadow-none">
+                  <CardHeader className="py-3 px-4 border-b border-emerald-100">
+                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-700">AI Suggested Fix</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3.5 text-xs">
+                    <div>
+                      <div className="font-bold text-emerald-800">Meta Title</div>
+                      <div className="text-emerald-950 font-semibold mt-1 bg-white p-2 rounded border border-emerald-200">{aiFixSuggestions.optimizedTitle}</div>
+                      <span className="text-[10px] text-emerald-600 mt-1 block">{aiFixSuggestions.optimizedTitle.length} characters</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-emerald-800">Meta Description</div>
+                      <div className="text-emerald-950 font-semibold mt-1 bg-white p-2 rounded border border-emerald-200 line-clamp-4">{aiFixSuggestions.optimizedDescription}</div>
+                      <span className="text-[10px] text-emerald-600 mt-1 block">{aiFixSuggestions.optimizedDescription.length} characters</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-emerald-800">Meta Keywords</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {aiFixSuggestions.optimizedKeywords.map(k => (
+                          <Badge key={k} className="bg-emerald-100 text-emerald-800 text-[10px] hover:bg-emerald-100">{k}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+                  onClick={() => selectedPage && handleApplyAiFix(selectedPage)}
+                  disabled={isAiPending}
+                >
+                  {isAiPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Apply AI Fixes
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() => setIsAiModalOpen(false)}
+                  disabled={isAiPending}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
 

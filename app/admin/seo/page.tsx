@@ -1,13 +1,14 @@
-import { getSeoPagesList, getSeoKeywordRankings, getGoogleGscConfig } from "@/app/actions/seo-auditor-actions"
+import { getSeoPagesList, getSeoKeywordRankings, getGoogleGscConfig, getGeminiConfig } from "@/app/actions/seo-auditor-actions"
 import { SeoAuditorDashboard } from "@/components/admin/seo-auditor-dashboard"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminSeoAuditorPage() {
-  const [pages, rankingsResult, gscConfig] = await Promise.all([
+  const [pages, rankingsResult, gscConfig, geminiConfig] = await Promise.all([
     getSeoPagesList(),
     getSeoKeywordRankings(),
-    getGoogleGscConfig()
+    getGoogleGscConfig(),
+    getGeminiConfig()
   ])
 
   return (
@@ -17,6 +18,7 @@ export default async function AdminSeoAuditorPage() {
       initialGscConfig={gscConfig}
       initialConnected={rankingsResult.connected}
       initialError={rankingsResult.error}
+      initialGeminiConfig={geminiConfig}
     />
   )
 }
