@@ -277,7 +277,8 @@ function auditPage(
     h1Count,
     hasAltTags,
     hasCanonical,
-    seoScore: Math.min(100, score)
+    seoScore: Math.min(100, score),
+    checklist
   }
 }
 
